@@ -1,4 +1,4 @@
-# Script de Automação de Ferramentas de TI no Ubuntu Server
+# Script - Ferramentas para o setor de T.I.
 
 Este repositório contém um script de automação para a instalação e configuração das principais ferramentas utilizadas no setor de TI em um servidor Ubuntu. As ferramentas incluídas são:
 

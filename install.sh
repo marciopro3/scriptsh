@@ -111,4 +111,31 @@ echo "Ativando o Grafana."
 sudo systemctl enable grafana-server
 sudo systemctl start grafana-server
 
+# Instala o Samba
+sudo apt install samba -y
+
+# Cria o diretório para compartilhamento
+sudo mkdir -p /srv/samba/shared
+sudo chown nobody:nogroup /srv/samba/shared
+sudo chmod 2775 /srv/samba/shared
+sudo chown -R :sambashare /srv/samba/shared
+
+# Verifica se o bloco já existe e adiciona se necessário
+if ! grep -q "\[shared\]" /etc/samba/smb.conf; then
+    cat <<EOL | sudo tee -a /etc/samba/smb.conf
+
+[shared]
+   path = /srv/samba/shared
+   browseable = yes
+   read only = no
+   guest ok = yes
+   force group = sambashare
+   create mask = 0660
+   directory mask = 2770
+EOL
+fi
+
+# Reinicia o serviço do Samba
+sudo systemctl restart smbd
+
 echo "Instalação concluída. Configure cada serviço conforme necessário."

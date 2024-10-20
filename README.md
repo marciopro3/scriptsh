@@ -8,6 +8,7 @@ Este repositório contém um script de automação para a instalação e configu
 - Grafana
 - MySQL
 - Samba
+- Servidor WEB
 
 ## Pré-requisitos
 
@@ -41,6 +42,9 @@ apt-get install expect -y
 
 6. Samba  
    Samba é uma suíte de software que permite a interoperabilidade de arquivos e serviços de impressão entre sistemas operacionais Unix/Linux e Windows.
+
+7. Servidor WEB 
+   Todas as ferramentas para testar o site antes de subir para a produção.
 
 ## Como Usar
 

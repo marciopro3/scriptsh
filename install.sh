@@ -21,6 +21,19 @@ sudo sed -i 's/bind-address = 127.0.0.1/bind-address = 0.0.0.0/' /etc/mysql/mysq
 echo "Instalando pacotes necessários."
 sudo apt install -y wget curl gnupg2 software-properties-common
 
+# Instalar servidor Apache
+echo "Instalando o servidor Apache."
+sudo apt install apache2 -y
+
+# Configurar firewall para permitir tráfego HTTP e HTTPS
+echo "Configurando o firewall para permitir tráfego HTTP e HTTPS."
+sudo ufw allow in "Apache"
+
+# Reiniciar o serviço do Apache
+echo "Reiniciando o Apache."
+sudo systemctl restart apache2
+sudo systemctl enable apache2
+
 # Adicionar repositório do Zabbix
 echo "Adicionando pacotes do ZABBIX."
 wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb
@@ -97,7 +110,6 @@ sudo systemctl restart apache2
 # Instalar UniFi Controller
 echo "Instalar UniFi Controller."
 apt-get update; apt-get install ca-certificates curl -y
-
 curl -sO https://get.glennr.nl/unifi/install/unifi-8.3.32.sh && bash unifi-8.3.32.sh
 
 # Instalação do Grafana
@@ -111,16 +123,16 @@ echo "Ativando o Grafana."
 sudo systemctl enable grafana-server
 sudo systemctl start grafana-server
 
-# Instala o Samba
+# Instalar o Samba
 sudo apt install samba -y
 
-# Cria o diretório para compartilhamento
+# Criar o diretório para compartilhamento
 sudo mkdir -p /srv/samba/shared
 sudo chown nobody:nogroup /srv/samba/shared
 sudo chmod 2775 /srv/samba/shared
 sudo chown -R :sambashare /srv/samba/shared
 
-# Verifica se o bloco já existe e adiciona se necessário
+# Configurar Samba para compartilhamento
 if ! grep -q "\[shared\]" /etc/samba/smb.conf; then
     cat <<EOL | sudo tee -a /etc/samba/smb.conf
 
@@ -135,7 +147,7 @@ if ! grep -q "\[shared\]" /etc/samba/smb.conf; then
 EOL
 fi
 
-# Reinicia o serviço do Samba
+# Reiniciar o serviço do Samba
 sudo systemctl restart smbd
 
 echo "Instalação concluída. Configure cada serviço conforme necessário."

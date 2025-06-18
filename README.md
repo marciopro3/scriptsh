@@ -1,3 +1,4 @@
+cat <<'EOF' > README.md
 # 🚀 Script de Instalação Automática - Infraestrutura Completa para TI
 
 Este projeto oferece um script de automação robusto que instala e configura **as principais ferramentas utilizadas em departamentos de TI** e provedores de serviços, como no caso da empresa **V3V – Publicidade e Desenvolvimento de Software**.
@@ -45,8 +46,75 @@ Antes de executar o script, verifique:
 
 Clone este repositório no seu servidor Ubuntu:
 
-```bash
+\`\`\`bash
 git clone https://github.com/seu-usuario/seu-repositorio.git
 cd seu-repositorio
 chmod +x install.sh
 ./install.sh
+\`\`\`
+
+---
+
+## 📁 Estrutura do Script
+
+O arquivo \`install.sh\` é modular, com instalação sequencial e organizada para cada ferramenta. Ele realiza:
+
+1. Atualizações do sistema
+2. Instalação do MySQL com permissões de acesso remoto
+3. Criação de bancos e usuários para GLPI, Zabbix e Nextcloud
+4. Instalação de servidores web e PHP
+5. Configuração do Apache em múltiplas portas
+6. Instalação de Docker e Portainer
+7. Instalação direta de UniFi Controller e Grafana
+
+---
+
+## 📷 Exemplo de Aplicação
+
+Este script foi implantado na **empresa V3V**, com foco em:
+
+- Gerenciar chamados de suporte com o GLPI
+- Monitorar equipamentos e serviços com o Zabbix
+- Gerenciar rede UniFi em diversos setores
+- Compartilhar arquivos entre times com Nextcloud
+- Criar dashboards analíticos com Grafana
+- Gerenciar containers via Portainer
+
+---
+
+## 🤝 Contribuição
+
+Sinta-se à vontade para sugerir melhorias:
+
+1. Faça um fork deste repositório
+2. Crie uma branch:
+   \`\`\`bash
+   git checkout -b feature-nova
+   \`\`\`
+3. Commit:
+   \`\`\`bash
+   git commit -m "Nova funcionalidade"
+   \`\`\`
+4. Push:
+   \`\`\`bash
+   git push origin feature-nova
+   \`\`\`
+5. Abra um Pull Request
+
+---
+
+## 📬 Suporte
+
+Em caso de dúvidas ou sugestões, entre em contato:  
+📧 **marciopro3@gmail.com**
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a Licença MIT. Consulte o arquivo \`LICENSE\`.
+
+---
+
+**"Compartilhar conhecimento é multiplicar oportunidades. Vamos transformar a TI juntos!"**
+EOF

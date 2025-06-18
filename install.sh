@@ -93,9 +93,9 @@ echo "Configurando Apache para GLPI na porta 8888."
 cat <<EOF | sudo tee /etc/apache2/sites-available/glpi-8888.conf
 Listen 8888
 <VirtualHost *:8888>
-    ServerAdmin admin@sj.ddns.net
+    ServerAdmin admin@vitao.ddns.net
     DocumentRoot /var/www/html/glpi
-    ServerName sj.ddns.net
+    ServerName vitao.ddns.net
 
     <Directory /var/www/html/glpi>
         Options FollowSymLinks
@@ -149,7 +149,7 @@ docker run -d -p 9000:9000 -p 9443:9443 \
   -v portainer_data:/data \
   portainer/portainer-ce:latest
 
-echo "Portainer disponível em: https://sj.ddns.net:9443"
+echo "Portainer disponível em: https://vitao.ddns.net:9443"
 
 # Instalar Nextcloud
 echo "Instalando dependências do Nextcloud."
@@ -174,9 +174,9 @@ echo "Configurando Apache para Nextcloud na porta 8081."
 cat <<EOF | sudo tee /etc/apache2/sites-available/nextcloud-8081.conf
 Listen 8081
 <VirtualHost *:8081>
-    ServerAdmin admin@sj.ddns.net
+    ServerAdmin admin@vitao.ddns.net
     DocumentRoot /var/www/html/nextcloud
-    ServerName sj.ddns.net
+    ServerName vitao.ddns.net
 
     <Directory /var/www/html/nextcloud>
         Options +FollowSymlinks
@@ -199,7 +199,7 @@ sudo systemctl restart apache2
 
 # Fim
 echo "Instalação concluída!"
-echo "GLPI: http://sj.ddns.net:8888"
-echo "Nextcloud: http://sj.ddns.net:8081"
-echo "Portainer: https://sj.ddns.net:9443"
+echo "GLPI: http://vitao.ddns.net:8888"
+echo "Nextcloud: http://vitao.ddns.net:8081"
+echo "Portainer: https://vitao.ddns.net:9443"
 echo "Usuários MySQL criados com a senha padrão: Admin123*"

@@ -1,111 +1,52 @@
-# Script - Ferramentas para o setor de T.I.
+# 🚀 Script de Instalação Automática - Infraestrutura Completa para TI
 
-Este repositório contém um script de automação para a instalação e configuração das principais ferramentas utilizadas no setor de TI em um servidor Ubuntu. As ferramentas incluídas são:
+Este projeto oferece um script de automação robusto que instala e configura **as principais ferramentas utilizadas em departamentos de TI** e provedores de serviços, como no caso da empresa **V3V – Publicidade e Desenvolvimento de Software**.
 
-- GLPI
-- UniFi Controller
-- Zabbix
-- Grafana
-- MySQL
-- Samba
-- Servidor WEB
+🔧 Ideal para ambientes de desenvolvimento, monitoramento, suporte técnico e colaboração.
 
-## Pré-requisitos
+## 🛠️ Ferramentas Instaladas
 
-Antes de executar o script, certifique-se de que você atendeu aos seguintes requisitos:
+| Ferramenta           | Descrição                                                                 |
+|----------------------|---------------------------------------------------------------------------|
+| **Zabbix**           | Monitoramento de infraestrutura e serviços em tempo real                  |
+| **GLPI**             | Gerenciamento de chamados, ativos e inventário de TI                      |
+| **UniFi Controller** | Gerenciamento centralizado de dispositivos UniFi                          |
+| **Grafana**          | Visualização e análise de métricas com painéis interativos                |
+| **Nextcloud**        | Nuvem privada para colaboração e compartilhamento de arquivos             |
+| **MySQL**            | Banco de dados relacional utilizado por todos os sistemas acima           |
+| **Apache2**          | Servidor web configurado para múltiplas portas                            |
+| **Docker + Portainer** | Gerenciamento de containers com interface gráfica via navegador        |
 
-- **Ubuntu Server:** O script foi testado no Ubuntu Server 24.04 LTS.
-- **Acesso root:** É necessário estar logado como root ou ter permissões de sudo.
-- **Internet:** O servidor deve estar conectado à internet para baixar os pacotes necessários.
-- **expect:** Certifique-se de que o expect está instalado para automatização das entradas interativas. Você pode instalá-lo com o comando:
+---
 
-```bash
-apt-get install expect -y
-```
+## ✅ Pré-requisitos
 
-## Ferramentas Instaladas
+Antes de executar o script, verifique:
 
-1. GLPI  
-   GLPI é um software de gerenciamento de ativos e helpdesk de TI.
+- ✅ **Ubuntu Server 24.04 LTS** (ou compatível)
+- ✅ **Acesso root ou sudo habilitado**
+- ✅ **Conexão com a Internet**
+- ✅ **Portas 8888, 8081 e 9443 liberadas no roteador (para acesso externo)**
 
-2. UniFi Controller**  
-   O UniFi Controller é um software de gerenciamento para dispositivos UniFi.
+---
 
-3. Zabbix
-   Zabbix é uma ferramenta de monitoramento de rede e servidores.
+## 🔐 Informações de Acesso Padrão
 
-4. Grafana  
-   Grafana é uma plataforma de análise e monitoramento open-source.
+- **Senha do MySQL root:** `Admin123*`  
+- **Senhas dos bancos (GLPI, Zabbix, Nextcloud):** `Admin123*`  
+- **Portas configuradas:**  
+  - GLPI: `http://<IP>:8888`  
+  - Nextcloud: `http://<IP>:8081`  
+  - Portainer: `https://<IP>:9443`  
 
-5. MySQL  
-   MySQL é um sistema de gerenciamento de banco de dados relacional.
+---
 
-6. Samba  
-   Samba é uma suíte de software que permite a interoperabilidade de arquivos e serviços de impressão entre sistemas operacionais Unix/Linux e Windows.
+## 💻 Como Executar
 
-7. Servidor WEB
-   Todas as ferramentas para testar o site antes de subir para a produção.
-
-## Como Usar
-
-Clone este repositório para o seu servidor:
+Clone este repositório no seu servidor Ubuntu:
 
 ```bash
 git clone https://github.com/seu-usuario/seu-repositorio.git
 cd seu-repositorio
-```
-
-Torne o script executável:
-
-```bash
 chmod +x install.sh
-```
-
-Execute o script:
-
-```bash
 ./install.sh
-```
-
-Siga as instruções interativas, se houverem.
-
-## Estrutura do Script
-
-O script `install.sh` é organizado em seções para instalar cada ferramenta individualmente. Cada seção do script contém os passos necessários para a instalação e configuração da respectiva ferramenta.
-
-## Suporte
-
-Para questões, dúvidas ou problemas, por favor, abra um "Issue" neste repositório ou entre em contato através do e-mail: marciopro3@gmail.com.
-
-## Contribuição
-
-Sinta-se à vontade para contribuir com melhorias ou correções. Para contribuir, siga estes passos:
-
-1. Faça um fork deste repositório.
-2. Crie uma branch para suas alterações:
-
-    ```bash
-    git checkout -b minha-alteracao
-    ```
-
-3. Faça um commit com suas alterações:
-
-    ```bash
-    git commit -m "Descrição da minha alteração"
-    ```
-
-4. Envie suas alterações para o repositório remoto:
-
-    ```bash
-    git push origin minha-alteracao
-    ```
-
-5. Abra um Pull Request.
-
-## Licença
-
-Este projeto é licenciado sob a Licença MIT - veja o arquivo LICENSE para mais detalhes.
-
----
-
-Sinta-se à vontade para ajustar qualquer parte conforme necessário para melhor atender ao seu projeto específico! "Ajude o teu próximo sempre e a ajuda virá até você."

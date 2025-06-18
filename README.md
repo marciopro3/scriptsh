@@ -116,5 +116,5 @@ Este projeto está licenciado sob a Licença MIT. Consulte o arquivo \`LICENSE\`
 
 ---
 
-**"Compartilhar conhecimento é multiplicar oportunidades. Vamos transformar a TI juntos!"**
+**Sinta-se à vontade para ajustar qualquer parte conforme necessário para melhor atender ao seu projeto específico! "Ajude o teu próximo sempre e a ajuda virá até você."
 EOF

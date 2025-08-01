@@ -1,6 +1,6 @@
 # 🚀 Script de Instalação Automática - Infraestrutura Completa para TI
 
-Este projeto oferece um script de automação robusto que instala e configura **as principais ferramentas utilizadas em departamentos de TI** e provedores de serviços, como no caso da empresa **V3V – Publicidade e Desenvolvimento de Software**.
+Este projeto oferece um script de automação robusto que instala e configura **as principais ferramentas utilizadas em departamentos de TI** e provedores de serviços.
 
 🔧 Ideal para ambientes de desenvolvimento, monitoramento, suporte técnico e colaboração.
 

@@ -70,8 +70,6 @@ O arquivo \`install.sh\` é modular, com instalação sequencial e organizada pa
 
 ## 📷 Exemplo de Aplicação
 
-Este script foi implantado na **empresa V3V**, com foco em:
-
 - Gerenciar chamados de suporte com o GLPI
 - Monitorar equipamentos e serviços com o Zabbix
 - Gerenciar rede UniFi em diversos setores

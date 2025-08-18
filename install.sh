@@ -75,8 +75,9 @@ install_zabbix() {
     dpkg -i "$TEMPDIR/zabbix.deb"
     apt-get update
     
-    # Instalar pacotes
-    apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-agent wget gzip
+    # Instalar pacotes (adicionando zabbix-sql-scripts)
+    apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf \
+        zabbix-sql-scripts zabbix-agent wget gzip
 
     # Criar/recriar banco de dados
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS zabbix; CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
@@ -87,24 +88,8 @@ install_zabbix() {
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 1;"
 
-    # Baixar schema oficial do Zabbix
-    ZABBIX_VERSION="7.4.1"
-    wget -q -O "$TEMPDIR/zabbix-$ZABBIX_VERSION.tar.gz" \
-        "https://cdn.zabbix.com/zabbix/sources/stable/7.4/zabbix-$ZABBIX_VERSION.tar.gz"
-    
-    # Extrair e importar schema MySQL
-    tar -xzf "$TEMPDIR/zabbix-$ZABBIX_VERSION.tar.gz" -C "$TEMPDIR"
-    
-    # Verificar se o arquivo foi extraído corretamente
-    if [ -f "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" ]; then
-        zcat "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" | \
-            mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
-    else
-        echo "Erro: Arquivo do schema não encontrado em $TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" | tee -a "$LOG_FILE"
-        echo "Verificando conteúdo do diretório:" | tee -a "$LOG_FILE"
-        ls -la "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/" | tee -a "$LOG_FILE"
-        exit 1
-    fi
+    # Importar schema usando o arquivo que vem com o pacote (modificado para o caminho correto)
+    zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
 
     # Reverter configuração de segurança
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 0;"

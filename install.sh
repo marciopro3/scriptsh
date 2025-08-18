@@ -197,9 +197,29 @@ sudo a2enmod headers env dir mime setenvif
 sudo systemctl reload apache2
 sudo systemctl restart apache2
 
+# Instalar servidor de impressão (CUPS) e liberar para todos os IPs
+echo "Instalando CUPS (Servidor de impressão)."
+sudo apt install -y cups
+# Configurar CUPS para ouvir em todas as interfaces
+sudo sed -i 's/^Listen localhost:631/Port 631/' /etc/cups/cupsd.conf
+# Liberar acesso para todos os IPs
+sudo sed -i '/<Location \/>/,/<\/Location>/c\<Location />\n  Order allow,deny\n  Allow all\n</Location>' /etc/cups/cupsd.conf
+sudo sed -i '/<Location \/admin>/,/<\/Location>/c\<Location /admin>\n  Order allow,deny\n  Allow all\n</Location>' /etc/cups/cupsd.conf
+sudo sed -i '/<Location \/admin\/conf>/,/<\/Location>/c\<Location /admin/conf>\n  Order allow,deny\n  Allow all\n</Location>' /etc/cups/cupsd.conf
+# Reiniciar e ativar serviço
+sudo systemctl enable cups
+sudo systemctl restart cups
+# Adicionar usuário atual ao grupo lpadmin
+sudo usermod -aG lpadmin $USER
+echo "CUPS ativo e acessível em: http://$(hostname -I | awk '{print $1}'):631"
+
+# Instalar Duplicati (Backup)
+echo "Instalando Duplicati."
+wget https://updates.duplicati.com/beta/duplicati_2.0.7.1-1_all.deb -O /tmp/duplicati.deb
+sudo dpkg -i /tmp/duplicati.deb || sudo apt -f install -y
+sudo systemctl enable duplicati
+sudo systemctl start duplicati
+echo "Duplicati disponível na porta 8200: http://$(hostname -I | awk '{print $1}'):8200"
+
 # Fim
 echo "Instalação concluída!"
-echo "GLPI: http://vitao.ddns.net:8888"
-echo "Nextcloud: http://vitao.ddns.net:8081"
-echo "Portainer: https://vitao.ddns.net:9443"
-echo "Usuários MySQL criados com a senha padrão: Admin123*"

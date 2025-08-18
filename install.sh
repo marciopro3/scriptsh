@@ -42,8 +42,8 @@ sudo systemctl enable apache2
 
 # Adicionar repositório do Zabbix
 echo "Adicionando repositório do Zabbix."
-wget https://repo.zabbix.com/zabbix/7.2/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.2+ubuntu24.04_all.deb
-sudo dpkg -i zabbix-release_latest_7.2+ubuntu24.04_all.deb
+wget https://repo.zabbix.com/zabbix/7.4/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.4+ubuntu24.04_all.deb
+sudo dpkg -i zabbix-release_latest_7.4+ubuntu24.04_all.deb
 sudo apt update
 
 # Instalar Zabbix
@@ -76,8 +76,8 @@ sudo systemctl enable zabbix-server zabbix-agent apache2
 # Instalar GLPI
 echo "Instalando GLPI."
 sudo apt install -y apache2 php libapache2-mod-php php-mysql php-curl php-ldap php-imap php-apcu php-gd php-xml php-mbstring php-xmlrpc php-cas php-intl php-zip php8.3-bz2
-wget https://github.com/glpi-project/glpi/releases/download/10.0.18/glpi-10.0.18.tgz  
-tar -xvzf glpi-10.0.18.tgz  
+wget https://github.com/glpi-project/glpi/releases/download/10.0.19/glpi-10.0.19.tgz 
+tar -xvzf glpi-10.0.19.tgz  
 sudo mv glpi /var/www/html/glpi
 sudo chown -R www-data:www-data /var/www/html/glpi
 sudo chmod -R 755 /var/www/html/glpi
@@ -115,13 +115,13 @@ sudo systemctl reload apache2
 # Instalar UniFi Controller
 echo "Instalando UniFi Controller."
 sudo apt-get install -y ca-certificates curl
-curl -sO https://get.glennr.nl/unifi/install/unifi-9.2.87.sh && bash unifi-9.2.87.sh
+curl -sO https://get.glennr.nl/unifi/install/unifi-9.3.45.sh && bash unifi-9.3.45.sh
 
 # Instalar Grafana
 echo "Instalando Grafana."
 sudo apt-get install -y adduser libfontconfig1 musl
-wget https://dl.grafana.com/oss/release/grafana_12.0.2_amd64.deb
-sudo dpkg -i grafana_12.0.2_amd64.deb
+wget https://dl.grafana.com/grafana/release/12.1.1/grafana_12.1.1_16903967602_linux_amd64.deb
+sudo dpkg -i grafana_12.1.1_16903967602_linux_amd64.deb
 sudo systemctl enable grafana-server
 sudo systemctl start grafana-server
 
@@ -148,8 +148,6 @@ docker run -d -p 9000:9000 -p 9443:9443 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v portainer_data:/data \
   portainer/portainer-ce:latest
-
-echo "Portainer disponível em: https://vitao.ddns.net:9443"
 
 # Instalar Nextcloud
 echo "Instalando dependências do Nextcloud."

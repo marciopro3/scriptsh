@@ -90,7 +90,7 @@ O arquivo `install.sh` realiza automaticamente:
 
 ---
 
-## omo contribuir
+## Como contribuir
 
 O **EMPRESA LIVRE** é um projeto comunitário.
 Se você é desenvolvedor, profissional de TI ou empresário que já utiliza essas ferramentas, pode colaborar:

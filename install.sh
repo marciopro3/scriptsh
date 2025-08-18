@@ -75,10 +75,30 @@ install_zabbix() {
     dpkg -i "$TEMPDIR/zabbix.deb"
     apt-get update
     
-    # Instalar pacotes (adicionando zabbix-sql-scripts)
-    apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf \
-        zabbix-sql-scripts zabbix-agent wget gzip
+    # Instalar pacotes com verificação de erro
+    if ! apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf \
+        zabbix-sql-scripts zabbix-agent wget gzip; then
+        echo "Falha na instalação dos pacotes do Zabbix" | tee -a "$LOG_FILE"
+        exit 1
+    fi
 
+    # Verificar onde os scripts SQL foram instalados
+    SQL_SCRIPT_PATH=$(dpkg -L zabbix-sql-scripts | grep 'server.sql.gz$' | head -1)
+    
+    if [ -z "$SQL_SCRIPT_PATH" ]; then
+        echo "Arquivo server.sql.gz não encontrado nos pacotes instalados" | tee -a "$LOG_FILE"
+        echo "Procurando em locais alternativos..." | tee -a "$LOG_FILE"
+        # Tentativa alternativa
+        SQL_SCRIPT_PATH="/usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz"
+        
+        if [ ! -f "$SQL_SCRIPT_PATH" ]; then
+            echo "Erro: Arquivo server.sql.gz não encontrado em nenhum local padrão" | tee -a "$LOG_FILE"
+            exit 1
+        fi
+    fi
+
+    echo "Usando arquivo SQL em: $SQL_SCRIPT_PATH" | tee -a "$LOG_FILE"
+    
     # Criar/recriar banco de dados
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS zabbix; CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
 
@@ -88,8 +108,11 @@ install_zabbix() {
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 1;"
 
-    # Importar schema usando o arquivo que vem com o pacote (modificado para o caminho correto)
-    zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
+    # Importar schema com verificação de erro
+    if ! zcat "$SQL_SCRIPT_PATH" | mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix; then
+        echo "Falha ao importar schema para o banco de dados Zabbix" | tee -a "$LOG_FILE"
+        exit 1
+    fi
 
     # Reverter configuração de segurança
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 0;"
@@ -97,8 +120,17 @@ install_zabbix() {
     # Configurar senha no Zabbix server
     sed -i "s/# DBPassword=/DBPassword=$MYSQL_COMMON_PASSWORD/" /etc/zabbix/zabbix_server.conf
 
-    # Iniciar e habilitar serviços
-    systemctl restart zabbix-server zabbix-agent apache2
+    # Configurar timeout no arquivo de configuração do Zabbix
+    sed -i "s/# DBConnectTimeout=5/DBConnectTimeout=10/" /etc/zabbix/zabbix_server.conf
+
+    # Reiniciar serviços com verificação
+    systemctl restart apache2
+    if ! systemctl restart zabbix-server zabbix-agent; then
+        echo "Falha ao iniciar serviços do Zabbix. Verificando logs..." | tee -a "$LOG_FILE"
+        journalctl -xeu zabbix-server.service | tail -n 30 | tee -a "$LOG_FILE"
+        exit 1
+    fi
+    
     systemctl enable zabbix-server zabbix-agent apache2
 
     echo "Zabbix instalado e configurado com sucesso!" | tee -a "$LOG_FILE"

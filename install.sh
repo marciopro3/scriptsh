@@ -94,8 +94,17 @@ install_zabbix() {
     
     # Extrair e importar schema MySQL
     tar -xzf "$TEMPDIR/zabbix-$ZABBIX_VERSION.tar.gz" -C "$TEMPDIR"
-    zcat "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" | \
-        mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
+    
+    # Verificar se o arquivo foi extraído corretamente
+    if [ -f "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" ]; then
+        zcat "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" | \
+            mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
+    else
+        echo "Erro: Arquivo do schema não encontrado em $TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" | tee -a "$LOG_FILE"
+        echo "Verificando conteúdo do diretório:" | tee -a "$LOG_FILE"
+        ls -la "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/" | tee -a "$LOG_FILE"
+        exit 1
+    fi
 
     # Reverter configuração de segurança
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 0;"

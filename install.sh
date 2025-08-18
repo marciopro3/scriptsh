@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Configurações globais
-set -e  # Sai imediatamente se qualquer comando falhar
+set -e  
 LOG_FILE="/var/log/install_services.log"
 TEMPDIR="/tmp/install_services"
 
-# Senhas (conforme solicitado)
+# Senhas 
 MYSQL_ROOT_PASSWORD="Admin123*"
 MYSQL_COMMON_PASSWORD="Admin123*"
 
-# Versões dos pacotes (conforme solicitado)
+# Versões dos pacotes 
 GRAFANA_VERSION="12.1.1"
 PORTTAINER_VERSION="latest"
 UNIFI_VERSION="9.3.45"
@@ -19,7 +19,7 @@ GLPI_VERSION="10.0.19"
 # Criar diretório temporário
 mkdir -p "$TEMPDIR"
 
-# Função para limpeza final
+# Limpeza final
 cleanup() {
     echo "Limpando arquivos temporários..."
     rm -rf "$TEMPDIR"
@@ -34,7 +34,7 @@ echo "Iniciando instalação em $(date)" | tee "$LOG_FILE"
 install_mysql() {
     echo "Instalando e configurando MySQL..." | tee -a "$LOG_FILE"
     
-    # Instalar MySQL sem prompts
+    # Instalar MySQL 
     DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
     
     # Configurar acesso remoto e senha root

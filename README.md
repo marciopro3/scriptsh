@@ -1,14 +1,14 @@
-# 🏢 EMPRESA LIVRE – Infraestrutura Completa e Gratuita para Pequenas Empresas
+# Projeto: EMPRESA LIVRE – Infraestrutura Completa e Gratuita para Pequenas Empresas
 
 O **EMPRESA LIVRE** é um projeto open source que tem como objetivo **ajudar pequenas empresas e empreendedores** a terem acesso a uma infraestrutura de TI **robusta, segura e moderna** — sem depender de altos investimentos em softwares proprietários.
 
-🔧 Com apenas **um script**, você instala ferramentas de **gestão, monitoramento, backup, colaboração e segurança** que antes só estavam ao alcance de grandes organizações.
+Com apenas **um script**, você instala ferramentas de **gestão, monitoramento, backup, colaboração e segurança** que antes só estavam ao alcance de grandes organizações.
 
-🌍 O propósito é **democratizar o acesso à tecnologia** e oferecer autonomia para empresários que não têm familiaridade com o setor de TI.
+O propósito é **democratizar o acesso à tecnologia** e oferecer autonomia para empresários que não têm familiaridade com o setor de TI.
 
 ---
 
-## 🛠️ O que você terá instalado
+## O que você terá instalado
 
 | Ferramenta           | Para que serve                                                         |
 |----------------------|------------------------------------------------------------------------|
@@ -25,7 +25,7 @@ O **EMPRESA LIVRE** é um projeto open source que tem como objetivo **ajudar peq
 
 ---
 
-## ✅ Para quem é este projeto?
+## Para quem é este projeto?
 
 - 📌 Pequenas empresas que não têm setor de TI estruturado  
 - 📌 Escritórios e prestadores de serviços que precisam de mais organização  
@@ -34,7 +34,7 @@ O **EMPRESA LIVRE** é um projeto open source que tem como objetivo **ajudar peq
 
 ---
 
-## 🔐 Informações de Acesso Padrão
+## Informações de Acesso Padrão
 
 - **Senha do MySQL root:** `Admin123*`  
 - **Senhas dos bancos (GLPI, Zabbix, Nextcloud):** `Admin123*`  
@@ -61,7 +61,7 @@ chmod +x install.sh
 
 ---
 
-## 📁 O que o script faz
+## O que o script faz
 
 O arquivo `install.sh` realiza automaticamente:
 
@@ -77,20 +77,20 @@ O arquivo `install.sh` realiza automaticamente:
 
 ---
 
-## 📷 Como isso pode transformar sua empresa
+## Como isso pode transformar sua empresa
 
-* 📊 Controle total do seu ambiente de TI (monitoramento com Zabbix)
-* 🛠️ Gestão eficiente de chamados e ativos (GLPI)
-* 📂 Compartilhamento de arquivos seguro (Nextcloud)
-* 🌐 Rede gerenciada com centralização (UniFi)
-* 📈 Métricas e dashboards claros para decisões (Grafana)
-* 🖨️ Impressão em rede simplificada (CUPS)
-* 🔒 Backups automatizados para segurança (Duplicati)
-* 🐳 Containers prontos para novos serviços (Docker + Portainer)
+* Controle total do seu ambiente de TI (monitoramento com Zabbix)
+* Gestão eficiente de chamados e ativos (GLPI)
+* Compartilhamento de arquivos seguro (Nextcloud)
+* Rede gerenciada com centralização (UniFi)
+* Métricas e dashboards claros para decisões (Grafana)
+* Impressão em rede simplificada (CUPS)
+* Backups automatizados para segurança (Duplicati)
+* Containers prontos para novos serviços (Docker + Portainer)
 
 ---
 
-## 🤝 Como contribuir
+## omo contribuir
 
 O **EMPRESA LIVRE** é um projeto comunitário.
 Se você é desenvolvedor, profissional de TI ou empresário que já utiliza essas ferramentas, pode colaborar:
@@ -115,17 +115,17 @@ Se você é desenvolvedor, profissional de TI ou empresário que já utiliza ess
 
 ---
 
-## 📬 Contato
+## Contato
 
 Em caso de dúvidas ou sugestões, entre em contato:
-📧 **[marciopro3@gmail.com](mailto:marciopro3@gmail.com)**
+**[marciopro3@gmail.com](mailto:marciopro3@gmail.com)**
 
 ---
 
-## 📄 Licença
+## Licença
 
 Este projeto está licenciado sob a Licença MIT.
-🔓 **Livre para todos, feito para ajudar.**
+**Livre para todos, feito para ajudar.**
 
 ---
 

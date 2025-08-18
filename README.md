@@ -53,7 +53,7 @@ O propósito é **democratizar o acesso à tecnologia** e oferecer autonomia par
 Clone este repositório no seu servidor Ubuntu 24.04:
 
 ```bash
-git clone https://github.com/seu-usuario/empresa-livre.git
+git clone https://github.com/marciopro3/scriptsh/blob/main/install.sh
 cd empresa-livre
 chmod +x install.sh
 ./install.sh

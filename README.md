@@ -1,116 +1,88 @@
-# 🚀 Script de Instalação Automática - Infraestrutura Completa para TI
+# 🚀 EMPRESA LIVRE - Infraestrutura Completa para Pequenos Negócios
 
-Este projeto oferece um script de automação robusto que instala e configura **as principais ferramentas utilizadas em departamentos de TI** e provedores de serviços.
+![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Ubuntu](https://img.shields.io/badge/Tested%20on-Ubuntu%2024.04-orange)
 
-🔧 Ideal para ambientes de desenvolvimento, monitoramento, suporte técnico e colaboração.
+O **EMPRESA LIVRE** é uma solução completa e gratuita que oferece todas as ferramentas essenciais para pequenas empresas gerenciarem sua infraestrutura de TI de forma profissional.
 
-## 🛠️ Ferramentas Instaladas
+## 🌟 Recursos Principais
 
-| Ferramenta           | Descrição                                                                 |
-|----------------------|---------------------------------------------------------------------------|
-| **Zabbix**           | Monitoramento de infraestrutura e serviços em tempo real                  |
-| **GLPI**             | Gerenciamento de chamados, ativos e inventário de TI                      |
-| **UniFi Controller** | Gerenciamento centralizado de dispositivos UniFi                          |
-| **Grafana**          | Visualização e análise de métricas com painéis interativos                |
-| **Nextcloud**        | Nuvem privada para colaboração e compartilhamento de arquivos             |
-| **MySQL**            | Banco de dados relacional utilizado por todos os sistemas acima           |
-| **Apache2**          | Servidor web configurado para múltiplas portas                            |
-| **Docker + Portainer** | Gerenciamento de containers com interface gráfica via navegador        |
+- ✅ **Gestão de TI completa** (GLPI)
+- ✅ **Monitoramento em tempo real** (Zabbix)
+- ✅ **Nuvem privada** (Nextcloud)
+- ✅ **Gerenciamento de rede** (UniFi)
+- ✅ **Backup automatizado** (Duplicati)
+- ✅ **Servidor de impressão** (CUPS)
+- ✅ **Containers Docker** (Portainer)
 
----
+## 🛠️ Ferramentas Incluídas
 
-## ✅ Pré-requisitos
+| Ferramenta | Descrição | Porta Padrão |
+|------------|-----------|--------------|
+| **GLPI** | Sistema de gestão de chamados e ativos de TI | 8888 |
+| **Zabbix** | Monitoramento de servidores e serviços | 80 |
+| **Nextcloud** | Armazenamento e colaboração em nuvem | 8081 |
+| **UniFi Controller** | Gerenciamento de dispositivos UniFi | 8443 |
+| **Grafana** | Dashboards de métricas e visualização | 3000 |
+| **Portainer** | Gerenciamento de containers Docker | 9443 |
+| **CUPS** | Servidor de impressão em rede | 631 |
+| **Duplicati** | Sistema de backup automatizado | 8200 |
 
-Antes de executar o script, verifique:
+## ⚙️ Pré-requisitos
 
-- ✅ **Ubuntu Server 24.04 LTS** (ou compatível)
-- ✅ **Acesso root ou sudo habilitado**
-- ✅ **Conexão com a Internet**
-- ✅ **Portas 8888, 8081 e 9443 liberadas no roteador (para acesso externo)**
+- Ubuntu Server 24.04 LTS
+- 2GB RAM (mínimo)
+- 20GB de espaço em disco
+- Acesso root/sudo
+- Conexão com internet
 
----
+## 🚀 Instalação Automática
 
-## 🔐 Informações de Acesso Padrão
-
-- **Senha do MySQL root:** `Admin123*`  
-- **Senhas dos bancos (GLPI, Zabbix, Nextcloud):** `Admin123*`  
-- **Portas configuradas:**  
-  - GLPI: `http://<IP>:8888`  
-  - Nextcloud: `http://<IP>:8081`  
-  - Portainer: `https://<IP>:9443`  
-
----
-
-## 💻 Como Executar
-
-Clone este repositório no seu servidor Ubuntu:
-
-\`\`\`bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
+```bash
+git clone https://github.com/seu-usuario/empresa-livre.git
+cd empresa-livre
 chmod +x install.sh
-./install.sh
-\`\`\`
+sudo ./install.sh
+```
 
----
+## 🔐 Credenciais Padrão
 
-## 📁 Estrutura do Script
+| Serviço | Usuário | Senha |
+|---------|---------|-------|
+| MySQL | root | Admin123* |
+| GLPI | glpi_admin | Admin123* |
+| Nextcloud | admin | Admin123* |
+| Portainer | admin | Admin123* |
 
-O arquivo \`install.sh\` é modular, com instalação sequencial e organizada para cada ferramenta. Ele realiza:
+## 📊 Fluxo de Trabalho
 
-1. Atualizações do sistema
-2. Instalação do MySQL com permissões de acesso remoto
-3. Criação de bancos e usuários para GLPI, Zabbix e Nextcloud
-4. Instalação de servidores web e PHP
-5. Configuração do Apache em múltiplas portas
-6. Instalação de Docker e Portainer
-7. Instalação direta de UniFi Controller e Grafana
+1. **Monitoramento**: Zabbix observa toda infraestrutura
+2. **Gestão**: GLPI organiza chamados e ativos
+3. **Colaboração**: Nextcloud compartilha arquivos
+4. **Backup**: Duplicati protege os dados
+5. **Rede**: UniFi gerencia dispositivos
+6. **Containers**: Portainer gerencia aplicações
 
----
+## 🤝 Como Contribuir
 
-## 📷 Exemplo de Aplicação
-
-- Gerenciar chamados de suporte com o GLPI
-- Monitorar equipamentos e serviços com o Zabbix
-- Gerenciar rede UniFi em diversos setores
-- Compartilhar arquivos entre times com Nextcloud
-- Criar dashboards analíticos com Grafana
-- Gerenciar containers via Portainer
-
----
-
-## 🤝 Contribuição
-
-Sinta-se à vontade para sugerir melhorias:
-
-1. Faça um fork deste repositório
-2. Crie uma branch:
-   \`\`\`bash
-   git checkout -b feature-nova
-   \`\`\`
-3. Commit:
-   \`\`\`bash
-   git commit -m "Nova funcionalidade"
-   \`\`\`
-4. Push:
-   \`\`\`bash
-   git push origin feature-nova
-   \`\`\`
+1. Faça um fork do projeto
+2. Crie sua branch (`git checkout -b feature/novo-recurso`)
+3. Commit suas mudanças (`git commit -m 'Adiciona novo recurso'`)
+4. Push para a branch (`git push origin feature/novo-recurso`)
 5. Abra um Pull Request
-
----
 
 ## 📬 Suporte
 
-Em caso de dúvidas ou sugestões, entre em contato:  
-📧 **marciopro3@gmail.com**
-
----
+Entre em contato para dúvidas ou sugestões:
+📧 marciopro3@gmail.com
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT. Consulte o arquivo \`LICENSE\`.
+Distribuído sob licença MIT. Veja `LICENSE` para mais informações.
 
 ---
+
+**"Tecnologia acessível para transformar pequenos negócios"** 💼🚀
 
 **Sinta-se à vontade para ajustar qualquer parte conforme necessário para melhor atender ao seu projeto específico! "Ajude o teu próximo sempre e a ajuda virá até você."

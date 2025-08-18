@@ -55,8 +55,8 @@ Clone este repositório no seu servidor Ubuntu 24.04:
 ```bash
 git clone https://github.com/marciopro3/scriptsh.git
 cd empresa-livre
-chmod +x install.sh
-./install.sh
+chmod +x scriptsh.sh
+./scriptsh.sh
 ````
 
 ---

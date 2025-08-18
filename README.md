@@ -27,10 +27,10 @@ O propósito é **democratizar o acesso à tecnologia** e oferecer autonomia par
 
 ## Para quem é este projeto?
 
-- 📌 Pequenas empresas que não têm setor de TI estruturado  
-- 📌 Escritórios e prestadores de serviços que precisam de mais organização  
-- 📌 Empreendedores que querem reduzir custos com licenciamento de software  
-- 📌 Profissionais de TI que desejam implantar soluções rápidas e confiáveis em clientes  
+- Pequenas empresas que não têm setor de TI estruturado  
+- Escritórios e prestadores de serviços que precisam de mais organização  
+- Empreendedores que querem reduzir custos com licenciamento de software  
+- Profissionais de TI que desejam implantar soluções rápidas e confiáveis em clientes  
 
 ---
 
@@ -48,7 +48,7 @@ O propósito é **democratizar o acesso à tecnologia** e oferecer autonomia par
 
 ---
 
-## 💻 Como Executar
+## Como Executar
 
 Clone este repositório no seu servidor Ubuntu 24.04:
 

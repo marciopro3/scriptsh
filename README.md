@@ -53,7 +53,7 @@ O propósito é **democratizar o acesso à tecnologia** e oferecer autonomia par
 Clone este repositório no seu servidor Ubuntu 24.04:
 
 ```bash
-git clone [https://github.com/marciopro3/scriptsh/releases/download/untagged-bd869b2006470c796155/install.sh](https://github.com/marciopro3/scriptsh.git)
+git clone https://github.com/marciopro3/scriptsh.git
 cd empresa-livre
 chmod +x install.sh
 ./install.sh

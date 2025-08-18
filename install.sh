@@ -186,13 +186,38 @@ install_unifi() {
 }
 
 # Função para instalar Grafana
+GRAFANA_VERSION="12.1.1"
 install_grafana() {
-    echo "Instalando Grafana..." | tee -a "$LOG_FILE"
-    wget -q -O "$TEMPDIR/grafana.deb" \
-        https://dl.grafana.com/grafana/release/$GRAFANA_VERSION/grafana_${GRAFANA_VERSION}_linux_amd64.deb
-    dpkg -i "$TEMPDIR/grafana.deb"
+    echo "Instalando Grafana $GRAFANA_VERSION..." | tee -a "$LOG_FILE"
+    
+    # Instalar dependências necessárias
+    apt-get install -y adduser libfontconfig1 musl
+    
+    # Baixar o pacote específico para 12.1.1
+    wget -q -O "$TEMPDIR/grafana_12.1.1.deb" \
+        "https://dl.grafana.com/oss/release/grafana_12.1.1_amd64.deb" || {
+        echo "Falha ao baixar o pacote do Grafana 12.1.1" | tee -a "$LOG_FILE"
+        exit 1
+    }
+    
+    # Instalação com verificação de erro
+    if ! dpkg -i "$TEMPDIR/grafana_12.1.1.deb"; then
+        apt-get -f install -y || {
+            echo "Falha ao corrigir dependências do Grafana" | tee -a "$LOG_FILE"
+            exit 1
+        }
+    fi
+    
+    # Configurar e iniciar serviço
+    systemctl daemon-reload
     systemctl enable grafana-server
-    systemctl start grafana-server
+    if ! systemctl start grafana-server; then
+        echo "Falha ao iniciar o Grafana Server. Verifique os logs:" | tee -a "$LOG_FILE"
+        journalctl -u grafana-server -n 50 | tee -a "$LOG_FILE"
+        exit 1
+    fi
+    
+    echo "Grafana 12.1.1 instalado com sucesso!" | tee -a "$LOG_FILE"
 }
 
 # Função para instalar Docker e Portainer

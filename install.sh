@@ -76,37 +76,35 @@ install_zabbix() {
     apt-get update
     
     # Instalar pacotes
-    apt-get install -y zabbix-server-mysql zabbix-frontend-php \
-        zabbix-apache-conf zabbix-sql-scripts zabbix-agent
-    
+    apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+
     # Criar/recriar banco de dados
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS zabbix; CREATE DATABASE zabbix CHARACTER SET utf8 COLLATE utf8_bin;"
-    
+
     # Criar/recriar usuário
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP USER IF EXISTS 'zabbix'@'localhost';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE USER 'zabbix'@'localhost' IDENTIFIED BY '$MYSQL_COMMON_PASSWORD';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 1;"
-    
-    # Importar schema (corrigido caminho para Ubuntu 24.04)
-    if [ -f /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz ]; then
+
+    # Importar schema (caminho atualizado para Ubuntu 24.04)
+    if [ -f /usr/share/zabbix-sql-scripts/mysql/server.sql ]; then
         echo "Importando schema do Zabbix..."
-        zcat /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz | mysql \
-            --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
+        mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix < /usr/share/zabbix-sql-scripts/mysql/server.sql
     else
-        echo "Arquivo server.sql.gz não encontrado! Verifique a instalação do pacote zabbix-sql-scripts." | tee -a "$LOG_FILE"
+        echo "Arquivo server.sql não encontrado! Verifique a instalação do pacote zabbix-sql-scripts." | tee -a "$LOG_FILE"
     fi
-    
+
     # Reverter configuração de segurança
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 0;"
-    
+
     # Configurar senha no Zabbix server
     sed -i "s/# DBPassword=/DBPassword=$MYSQL_COMMON_PASSWORD/" /etc/zabbix/zabbix_server.conf
-    
+
     # Iniciar e habilitar serviços
     systemctl restart zabbix-server zabbix-agent apache2
     systemctl enable zabbix-server zabbix-agent apache2
-    
+
     echo "Zabbix instalado e configurado com sucesso!" | tee -a "$LOG_FILE"
 }
 

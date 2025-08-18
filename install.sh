@@ -6,7 +6,7 @@ LOG_FILE="/var/log/install_services.log"
 TEMPDIR="/tmp/install_services"
 
 # Senhas 
-MYSQL_ROOT_PASSWORD="Admin123*"
+MYSQL_ROOT_PASSWORD="12"
 MYSQL_COMMON_PASSWORD="Admin123*"
 
 # Versões dos pacotes 

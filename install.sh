@@ -76,10 +76,10 @@ install_zabbix() {
     apt-get update
     
     # Instalar pacotes
-    apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+    apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-agent wget gzip
 
     # Criar/recriar banco de dados
-    mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS zabbix; CREATE DATABASE zabbix CHARACTER SET utf8 COLLATE utf8_bin;"
+    mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS zabbix; CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
 
     # Criar/recriar usuário
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP USER IF EXISTS 'zabbix'@'localhost';"
@@ -87,13 +87,15 @@ install_zabbix() {
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 1;"
 
-    # Importar schema (caminho atualizado para Ubuntu 24.04)
-    if [ -f /usr/share/zabbix-sql-scripts/mysql/server.sql ]; then
-        echo "Importando schema do Zabbix..."
-        mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix < /usr/share/zabbix-sql-scripts/mysql/server.sql
-    else
-        echo "Arquivo server.sql não encontrado! Verifique a instalação do pacote zabbix-sql-scripts." | tee -a "$LOG_FILE"
-    fi
+    # Baixar schema oficial do Zabbix
+    ZABBIX_VERSION="7.4.1"
+    wget -q -O "$TEMPDIR/zabbix-$ZABBIX_VERSION.tar.gz" \
+        "https://cdn.zabbix.com/zabbix/sources/stable/7.4/zabbix-$ZABBIX_VERSION.tar.gz"
+    
+    # Extrair e importar schema MySQL
+    tar -xzf "$TEMPDIR/zabbix-$ZABBIX_VERSION.tar.gz" -C "$TEMPDIR"
+    zcat "$TEMPDIR/zabbix-$ZABBIX_VERSION/database/mysql/server.sql.gz" | \
+        mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
 
     # Reverter configuração de segurança
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 0;"

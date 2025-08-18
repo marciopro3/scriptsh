@@ -86,8 +86,12 @@ install_zabbix() {
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 1;"
     
     # Importar schema
-    zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql \
-        --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
+    if [ -f /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz ]; then
+        zcat /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz | mysql \
+            --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
+    else
+        echo "Arquivo server.sql.gz não encontrado! Verifique a instalação do pacote zabbix-sql-scripts." | tee -a "$LOG_FILE"
+    fi
     
     # Reverter configuração de segurança
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 0;"

@@ -154,7 +154,7 @@ install_unifi() {
     echo "Instalando UniFi Controller..." | tee -a "$LOG_FILE"
     wget -q -O "$TEMPDIR/unifi-install.sh" \
         https://get.glennr.nl/unifi/install/unifi-$UNIFI_VERSION.sh
-    bash "$TEMPDIR/unifi-install.sh"
+    yes y | bash "$TEMPDIR/unifi-install.sh"
 }
 
 # Função para instalar Grafana

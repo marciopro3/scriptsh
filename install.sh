@@ -245,46 +245,45 @@ install_cups() {
     # Backup do arquivo original
     cp /etc/cups/cupsd.conf /etc/cups/cupsd.conf.bak
 
-    # Substituir por um cups.conf seguro para rede local
-    cat > /etc/cups/cupsd.conf <<EOF
-# CUPS Configuration File
-LogLevel warn
-PageLogFormat
-MaxLogSize 0
+    # Garantir diretório de execução
+    mkdir -p /var/run/cups
+    chown root:lp /var/run/cups
+    chmod 755 /var/run/cups
 
-# Escutar em todas as interfaces e no socket local
+    # Substituir por um cups.conf funcional
+    cat > /etc/cups/cupsd.conf <<EOF
+LogLevel warn
+MaxLogSize 0
+PageLogFormat
+
 Port 631
-Listen 0.0.0.0:631
-Listen /var/run/cups/cups.sock
+Listen /run/cups/cups.sock
 
 Browsing On
 DefaultAuthType Basic
 WebInterface Yes
 
 <Location />
-  Order allow,deny
-  Allow all
   Require all granted
 </Location>
 
 <Location /admin>
-  Order allow,deny
-  Allow all
+  AuthType Default
   Require all granted
 </Location>
 
 <Location /admin/conf>
   AuthType Default
   Require user @SYSTEM
-  Order allow,deny
-  Allow all
 </Location>
 EOF
 
-    # Adicionar usuário atual ao grupo lpadmin
+    # Adicionar usuário ao grupo lpadmin
     usermod -aG lpadmin "$(logname 2>/dev/null || whoami)"
 
-    # Recarregar systemd e reiniciar serviço
+    # Testar configuração antes de iniciar
+    cupsd -t || { echo "Erro no cupsd.conf"; exit 1; }
+
     systemctl daemon-reload
     systemctl enable cups
     systemctl restart cups || systemctl status cups -l --no-pager

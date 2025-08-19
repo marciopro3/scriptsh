@@ -240,44 +240,54 @@ EOF
 # Função para instalar CUPS
 install_cups() {
     echo "Instalando CUPS..." | tee -a "$LOG_FILE"
-    apt-get install -y cups
+    apt-get install --reinstall -y cups
 
     # Backup do arquivo original
     cp /etc/cups/cupsd.conf /etc/cups/cupsd.conf.bak
 
-    # Substituir por configuração válida
+    # Substituir por um cups.conf seguro para rede local
     cat > /etc/cups/cupsd.conf <<EOF
 # CUPS Configuration File
+LogLevel warn
+PageLogFormat
+MaxLogSize 0
+
+# Escutar em todas as interfaces e no socket local
 Port 631
+Listen 0.0.0.0:631
 Listen /var/run/cups/cups.sock
 
 Browsing On
-BrowseLocalProtocols dnssd
-
 DefaultAuthType Basic
+WebInterface Yes
 
 <Location />
+  Order allow,deny
+  Allow all
   Require all granted
 </Location>
 
 <Location /admin>
-  AuthType Basic
-  Require valid-user
+  Order allow,deny
+  Allow all
+  Require all granted
 </Location>
 
 <Location /admin/conf>
-  AuthType Basic
-  Require valid-user
+  AuthType Default
+  Require user @SYSTEM
+  Order allow,deny
+  Allow all
 </Location>
 EOF
 
     # Adicionar usuário atual ao grupo lpadmin
-    usermod -aG lpadmin "$USER"
+    usermod -aG lpadmin "$(logname 2>/dev/null || whoami)"
 
-    # Habilitar e iniciar o serviço
+    # Recarregar systemd e reiniciar serviço
     systemctl daemon-reload
     systemctl enable cups
-    systemctl restart cups
+    systemctl restart cups || systemctl status cups -l --no-pager
 }
 
 # Função para instalar Duplicati

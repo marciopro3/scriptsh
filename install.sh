@@ -37,15 +37,20 @@ install_mysql() {
     # Instalar MySQL 
     DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
     
-    # Configurar acesso remoto e senha root
-    mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';"
+    # Configurar senha root
+    mysql -uroot <<EOF
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
+FLUSH PRIVILEGES;
+EOF
+    
+    # Limpar usuários e banco de teste
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS test;"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
     
     # Permitir acesso remoto
-    sed -i 's/bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
+    sed -i 's/^bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
     
     # Reiniciar MySQL
     systemctl restart mysql
@@ -69,95 +74,62 @@ install_apache() {
 install_zabbix() {
     echo "Instalando Zabbix..." | tee -a "$LOG_FILE"
     
-    # Adicionar repositório
     wget -q -O "$TEMPDIR/zabbix.deb" \
         https://repo.zabbix.com/zabbix/7.4/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.4+ubuntu24.04_all.deb
     dpkg -i "$TEMPDIR/zabbix.deb"
     apt-get update
     
-    # Instalar pacotes com verificação de erro
     if ! apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf \
         zabbix-sql-scripts zabbix-agent wget gzip; then
         echo "Falha na instalação dos pacotes do Zabbix" | tee -a "$LOG_FILE"
         exit 1
     fi
 
-    # Verificar onde os scripts SQL foram instalados
     SQL_SCRIPT_PATH=$(dpkg -L zabbix-sql-scripts | grep 'server.sql.gz$' | head -1)
-    
     if [ -z "$SQL_SCRIPT_PATH" ]; then
-        echo "Arquivo server.sql.gz não encontrado nos pacotes instalados" | tee -a "$LOG_FILE"
-        echo "Procurando em locais alternativos..." | tee -a "$LOG_FILE"
-        # Tentativa alternativa
         SQL_SCRIPT_PATH="/usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz"
-        
-        if [ ! -f "$SQL_SCRIPT_PATH" ]; then
-            echo "Erro: Arquivo server.sql.gz não encontrado em nenhum local padrão" | tee -a "$LOG_FILE"
-            exit 1
-        fi
+        [ ! -f "$SQL_SCRIPT_PATH" ] && { echo "Erro: Schema do Zabbix não encontrado"; exit 1; }
     fi
 
-    echo "Usando arquivo SQL em: $SQL_SCRIPT_PATH" | tee -a "$LOG_FILE"
-    
-    # Criar/recriar banco de dados
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS zabbix; CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
 
-    # Criar/recriar usuário
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP USER IF EXISTS 'zabbix'@'localhost';"
+    mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP USER IF EXISTS 'zabbix'@'127.0.0.1';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE USER 'zabbix'@'localhost' IDENTIFIED BY '$MYSQL_COMMON_PASSWORD';"
+    mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE USER 'zabbix'@'127.0.0.1' IDENTIFIED BY '$MYSQL_COMMON_PASSWORD';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';"
+    mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'127.0.0.1';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 1;"
 
-    # Importar schema com verificação de erro
-    if ! zcat "$SQL_SCRIPT_PATH" | mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix; then
-        echo "Falha ao importar schema para o banco de dados Zabbix" | tee -a "$LOG_FILE"
-        exit 1
-    fi
-
-    # Reverter configuração de segurança
+    zcat "$SQL_SCRIPT_PATH" | mysql --default-character-set=utf8mb4 -uzabbix -p"$MYSQL_COMMON_PASSWORD" zabbix
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 0;"
 
-    # Configurar senha no Zabbix server
     sed -i "s/# DBPassword=/DBPassword=$MYSQL_COMMON_PASSWORD/" /etc/zabbix/zabbix_server.conf
-
-    # Configurar timeout no arquivo de configuração do Zabbix
     sed -i "s/# DBConnectTimeout=5/DBConnectTimeout=10/" /etc/zabbix/zabbix_server.conf
 
-    # Reiniciar serviços com verificação
     systemctl restart apache2
-    if ! systemctl restart zabbix-server zabbix-agent; then
-        echo "Falha ao iniciar serviços do Zabbix. Verificando logs..." | tee -a "$LOG_FILE"
-        journalctl -xeu zabbix-server.service | tail -n 30 | tee -a "$LOG_FILE"
-        exit 1
-    fi
-    
+    systemctl restart zabbix-server zabbix-agent
     systemctl enable zabbix-server zabbix-agent apache2
-
-    echo "Zabbix instalado e configurado com sucesso!" | tee -a "$LOG_FILE"
 }
 
 # Função para instalar GLPI
 install_glpi() {
     echo "Instalando GLPI..." | tee -a "$LOG_FILE"
     
-    # Instalar dependências
     apt-get install -y php libapache2-mod-php php-mysql php-curl php-ldap \
         php-imap php-apcu php-gd php-xml php-mbstring php-xmlrpc php-cas \
-        php-intl php-zip php8.3-bz2
+        php-intl php-zip php-bz2
     
-    # Baixar e extrair GLPI
     wget -q -O "$TEMPDIR/glpi.tgz" \
         https://github.com/glpi-project/glpi/releases/download/$GLPI_VERSION/glpi-$GLPI_VERSION.tgz
     tar -xzf "$TEMPDIR/glpi.tgz" -C /var/www/html/
     chown -R www-data:www-data /var/www/html/glpi
     chmod -R 755 /var/www/html/glpi
     
-    # Criar banco de dados
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE glpi CHARACTER SET utf8 COLLATE utf8_general_ci;"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE USER 'glpi'@'localhost' IDENTIFIED BY '$MYSQL_COMMON_PASSWORD';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON glpi.* TO 'glpi'@'localhost';"
     
-    # Configurar virtual host
     cat > /etc/apache2/sites-available/glpi-8888.conf <<EOF
 Listen 8888
 <VirtualHost *:8888>
@@ -186,45 +158,28 @@ install_unifi() {
 }
 
 # Função para instalar Grafana
-GRAFANA_VERSION="12.1.1"
 install_grafana() {
     echo "Instalando Grafana $GRAFANA_VERSION..." | tee -a "$LOG_FILE"
     
-    # Instalar dependências necessárias
     apt-get install -y adduser libfontconfig1 musl
     
-    # Baixar o pacote específico para 12.1.1
-    wget -q -O "$TEMPDIR/grafana_12.1.1.deb" \
-        "https://dl.grafana.com/oss/release/grafana_12.1.1_amd64.deb" || {
-        echo "Falha ao baixar o pacote do Grafana 12.1.1" | tee -a "$LOG_FILE"
+    wget -q -O "$TEMPDIR/grafana_${GRAFANA_VERSION}.deb" \
+        "https://dl.grafana.com/oss/release/grafana_${GRAFANA_VERSION}_amd64.deb" || {
+        echo "Falha ao baixar Grafana" | tee -a "$LOG_FILE"
         exit 1
     }
     
-    # Instalação com verificação de erro
-    if ! dpkg -i "$TEMPDIR/grafana_12.1.1.deb"; then
-        apt-get -f install -y || {
-            echo "Falha ao corrigir dependências do Grafana" | tee -a "$LOG_FILE"
-            exit 1
-        }
-    fi
+    dpkg -i "$TEMPDIR/grafana_${GRAFANA_VERSION}.deb" || apt-get -f install -y
     
-    # Configurar e iniciar serviço
     systemctl daemon-reload
     systemctl enable grafana-server
-    if ! systemctl start grafana-server; then
-        echo "Falha ao iniciar o Grafana Server. Verifique os logs:" | tee -a "$LOG_FILE"
-        journalctl -u grafana-server -n 50 | tee -a "$LOG_FILE"
-        exit 1
-    fi
-    
-    echo "Grafana 12.1.1 instalado com sucesso!" | tee -a "$LOG_FILE"
+    systemctl start grafana-server
 }
 
 # Função para instalar Docker e Portainer
 install_docker_portainer() {
     echo "Instalando Docker e Portainer..." | tee -a "$LOG_FILE"
     
-    # Instalar Docker
     apt-get install -y ca-certificates curl gnupg lsb-release
     mkdir -p /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -234,7 +189,6 @@ install_docker_portainer() {
     apt-get update
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     
-    # Instalar Portainer
     docker volume create portainer_data
     docker run -d -p 9000:9000 -p 9443:9443 \
         --name portainer \
@@ -248,23 +202,19 @@ install_docker_portainer() {
 install_nextcloud() {
     echo "Instalando Nextcloud..." | tee -a "$LOG_FILE"
     
-    # Instalar dependências
     apt-get install -y php php-gd php-curl php-zip php-xml php-mbstring \
         php-bz2 php-intl php-bcmath php-imagick php-gmp php-apcu unzip
     
-    # Baixar e extrair Nextcloud
     wget -q -O "$TEMPDIR/nextcloud.zip" \
         https://download.nextcloud.com/server/releases/$NEXTCLOUD_VERSION.zip
     unzip "$TEMPDIR/nextcloud.zip" -d /var/www/html/
     chown -R www-data:www-data /var/www/html/nextcloud
     chmod -R 755 /var/www/html/nextcloud
     
-    # Criar banco de dados
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE nextcloud CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE USER 'nextcloud'@'localhost' IDENTIFIED BY '$MYSQL_COMMON_PASSWORD';"
     mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON nextcloud.* TO 'nextcloud'@'localhost';"
     
-    # Configurar virtual host
     cat > /etc/apache2/sites-available/nextcloud-8081.conf <<EOF
 Listen 8081
 <VirtualHost *:8081>
@@ -292,13 +242,11 @@ install_cups() {
     echo "Instalando CUPS..." | tee -a "$LOG_FILE"
     apt-get install -y cups
     
-    # Configurar acesso remoto
     sed -i 's/^Listen localhost:631/Port 631/' /etc/cups/cupsd.conf
-    sed -i '/<Location \/>/,/<\/Location>/c\<Location />\n  Order allow,deny\n  Allow all\n</Location>' /etc/cups/cupsd.conf
-    sed -i '/<Location \/admin>/,/<\/Location>/c\<Location /admin>\n  Order allow,deny\n  Allow all\n</Location>' /etc/cups/cupsd.conf
-    sed -i '/<Location \/admin\/conf>/,/<\/Location>/c\<Location /admin/conf>\n  Order allow,deny\n  Allow all\n</Location>' /etc/cups/cupsd.conf
+    sed -i '/<Location \/>/,/<\/Location>/c\<Location />\n  Require all granted\n</Location>' /etc/cups/cupsd.conf
+    sed -i '/<Location \/admin>/,/<\/Location>/c\<Location /admin>\n  Require all granted\n</Location>' /etc/cups/cupsd.conf
+    sed -i '/<Location \/admin\/conf>/,/<\/Location>/c\<Location /admin/conf>\n  Require all granted\n</Location>' /etc/cups/cupsd.conf
     
-    # Adicionar usuário ao grupo lpadmin
     usermod -aG lpadmin $USER
     
     systemctl enable cups
@@ -311,6 +259,22 @@ install_duplicati() {
     wget -q -O "$TEMPDIR/duplicati.deb" \
         https://updates.duplicati.com/beta/duplicati_2.0.7.1-1_all.deb
     dpkg -i "$TEMPDIR/duplicati.deb" || apt-get -f install -y
+    
+    cat > /etc/systemd/system/duplicati.service <<EOF
+[Unit]
+Description=Duplicati Backup Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/mono /usr/lib/duplicati/Duplicati.Server.exe --webservice-port=8200
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl daemon-reload
     systemctl enable duplicati
     systemctl start duplicati
 }

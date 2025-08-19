@@ -245,40 +245,37 @@ install_cups() {
     # Backup do arquivo original
     cp /etc/cups/cupsd.conf /etc/cups/cupsd.conf.bak
 
-    # Substituir por um cups.conf seguro para rede local
+    # Substituir por configuração válida
     cat > /etc/cups/cupsd.conf <<EOF
 # CUPS Configuration File
 Port 631
 Listen /var/run/cups/cups.sock
 
 Browsing On
-BrowseOrder allow,deny
-BrowseAllow all
+BrowseLocalProtocols dnssd
+
+DefaultAuthType Basic
 
 <Location />
-  Order allow,deny
-  Allow all
   Require all granted
 </Location>
 
 <Location /admin>
-  Order allow,deny
-  Allow all
-  Require all granted
+  AuthType Basic
+  Require valid-user
 </Location>
 
 <Location /admin/conf>
-  AuthType Default
-  Require user @SYSTEM
+  AuthType Basic
+  Require valid-user
 </Location>
-
-DefaultAuthType Basic
 EOF
 
     # Adicionar usuário atual ao grupo lpadmin
     usermod -aG lpadmin "$USER"
 
     # Habilitar e iniciar o serviço
+    systemctl daemon-reload
     systemctl enable cups
     systemctl restart cups
 }

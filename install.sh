@@ -15,7 +15,6 @@ PORTTAINER_VERSION="latest"
 UNIFI_VERSION="9.3.45"
 NEXTCLOUD_VERSION="latest"
 GLPI_VERSION="10.0.19"
-CUPS_VERSION="2.4.7" 
 
 # Criar diretório temporário
 mkdir -p "$TEMPDIR"
@@ -238,26 +237,6 @@ EOF
     systemctl reload apache2
 }
 
-# Função para instalar CUPS 
-install_cups() {
-    echo "Instalando CUPS a partir do repositório..." | tee -a "$LOG_FILE"
-    
-    # Instalar CUPS 
-    apt-get install -y cups
-    
-    # Adicionar usuário atual ao grupo lpadmin
-    CURRENT_USER=$(logname 2>/dev/null || echo $SUDO_USER || whoami)
-    usermod -aG lpadmin "$CURRENT_USER"
-    
-    # Habilitar e iniciar o serviço
-    systemctl enable cups
-    systemctl start cups
-    
-    echo "CUPS instalado com sucesso via repositório" | tee -a "$LOG_FILE"
-    echo "Usuário '$CURRENT_USER' adicionado ao grupo lpadmin" | tee -a "$LOG_FILE"
-    echo "Interface web disponível em: http://localhost:631" | tee -a "$LOG_FILE"
-}
-
 # Função para instalar Duplicati
 install_duplicati() {
     echo "Instalando Duplicati..." | tee -a "$LOG_FILE"
@@ -298,7 +277,6 @@ install_unifi
 install_grafana
 install_docker_portainer
 install_nextcloud
-install_cups
 install_duplicati
 
 # Limpeza final
@@ -312,4 +290,3 @@ echo " - Portainer: https://seu-ip:9443"
 echo " - UniFi: https://seu-ip:8443"
 echo " - Grafana: http://seu-ip:3000"
 echo " - Duplicati: http://seu-ip:8200"
-echo " - CUPS: http://seu-ip:631"

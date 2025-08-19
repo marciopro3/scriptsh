@@ -240,119 +240,22 @@ EOF
 
 # Função para instalar CUPS 
 install_cups() {
-    echo "Instalando CUPS $CUPS_VERSION a partir do código-fonte..." | tee -a "$LOG_FILE"
+    echo "Instalando CUPS a partir do repositório..." | tee -a "$LOG_FILE"
     
-    # Instalar dependências de compilação
-    apt-get install -y build-essential git autoconf automake libtool \
-        libavahi-client-dev libavahi-common-dev libgnutls28-dev \
-        libkrb5-dev libpng-dev libjpeg-dev libtiff-dev libusb-1.0-0-dev \
-        zlib1g-dev libpam0g-dev libsystemd-dev libssl-dev
+    # Instalar CUPS 
+    apt-get install -y cups
     
-    # Baixar código-fonte do CUPS
-    wget -q -O "$TEMPDIR/cups-$CUPS_VERSION-source.tar.gz" \
-        "https://github.com/OpenPrinting/cups/releases/download/v$CUPS_VERSION/cups-$CUPS_VERSION-source.tar.gz"
-    
-    # Extrair e compilar
-    tar -xzf "$TEMPDIR/cups-$CUPS_VERSION-source.tar.gz" -C "$TEMPDIR/"
-    cd "$TEMPDIR/cups-$CUPS_VERSION"
-    
-    # Configurar e compilar
-    ./configure --prefix=/usr \
-                --sysconfdir=/etc \
-                --localstatedir=/var \
-                --with-systemd \
-                --with-dbusdir=/usr/share/dbus-1 \
-                --enable-libpaper \
-                --enable-debug \
-                --enable-ssl \
-                --enable-dnssd \
-                --enable-avahi
-    
-    make -j$(nproc)
-    make install
-    
-    # Criar grupos do sistema necessários
-    if ! getent group lp >/dev/null; then
-        groupadd lp
-    fi
-    
-    if ! getent group lpadmin >/dev/null; then
-        groupadd lpadmin
-    fi
-    
-    # Criar usuário do sistema
-    if ! getent passwd lp >/dev/null; then
-        useradd -r -g lp -G lpadmin -d /var/spool/cups -s /usr/sbin/nologin -c "CUPS Daemon" lp
-    fi
-    
-    # Criar diretórios necessários
-    mkdir -p /var/spool/cups /var/cache/cups /var/run/cups /var/log/cups
-    chown -R lp:lp /var/spool/cups /var/cache/cups /var/run/cups /var/log/cups
-    
-    # Configurar serviço systemd
-    cat > /etc/systemd/system/cups.service <<EOF
-[Unit]
-Description=CUPS Scheduler
-Documentation=man:cupsd(8)
-After=network.target nss-lookup.target
-
-[Service]
-Type=notify
-ExecStart=/usr/sbin/cupsd -l
-ExecReload=/usr/sbin/cupsctl --help
-User=lp
-Group=lp
-RuntimeDirectory=cups
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    # Configuração básica do CUPS
-    mkdir -p /etc/cups
-    cat > /etc/cups/cupsd.conf <<EOF
-LogLevel warn
-MaxLogSize 0
-PageLogFormat
-
-Port 631
-Listen /var/run/cups/cups.sock
-
-Browsing On
-DefaultAuthType Basic
-WebInterface Yes
-
-<Location />
-  Order allow,deny
-  Allow all
-</Location>
-
-<Location /admin>
-  Order allow,deny
-  Allow all
-  AuthType Basic
-  Require user @SYSTEM
-</Location>
-
-<Location /admin/conf>
-  AuthType Basic
-  Require user @SYSTEM
-  Order allow,deny
-  Allow all
-</Location>
-EOF
-
     # Adicionar usuário atual ao grupo lpadmin
     CURRENT_USER=$(logname 2>/dev/null || echo $SUDO_USER || whoami)
     usermod -aG lpadmin "$CURRENT_USER"
     
-    # Recarregar e iniciar serviço
-    systemctl daemon-reload
+    # Habilitar e iniciar o serviço
     systemctl enable cups
     systemctl start cups
     
-    echo "CUPS $CUPS_VERSION instalado com sucesso a partir do código-fonte" | tee -a "$LOG_FILE"
+    echo "CUPS instalado com sucesso via repositório" | tee -a "$LOG_FILE"
     echo "Usuário '$CURRENT_USER' adicionado ao grupo lpadmin" | tee -a "$LOG_FILE"
+    echo "Interface web disponível em: http://localhost:631" | tee -a "$LOG_FILE"
 }
 
 # Função para instalar Duplicati

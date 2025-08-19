@@ -241,14 +241,44 @@ EOF
 install_cups() {
     echo "Instalando CUPS..." | tee -a "$LOG_FILE"
     apt-get install -y cups
-    
-    sed -i 's/^Listen localhost:631/Port 631/' /etc/cups/cupsd.conf
-    sed -i '/<Location \/>/,/<\/Location>/c\<Location />\n  Require all granted\n</Location>' /etc/cups/cupsd.conf
-    sed -i '/<Location \/admin>/,/<\/Location>/c\<Location /admin>\n  Require all granted\n</Location>' /etc/cups/cupsd.conf
-    sed -i '/<Location \/admin\/conf>/,/<\/Location>/c\<Location /admin/conf>\n  Require all granted\n</Location>' /etc/cups/cupsd.conf
-    
-    usermod -aG lpadmin $USER
-    
+
+    # Backup do arquivo original
+    cp /etc/cups/cupsd.conf /etc/cups/cupsd.conf.bak
+
+    # Substituir por um cups.conf seguro para rede local
+    cat > /etc/cups/cupsd.conf <<EOF
+# CUPS Configuration File
+Port 631
+Listen /var/run/cups/cups.sock
+
+Browsing On
+BrowseOrder allow,deny
+BrowseAllow all
+
+<Location />
+  Order allow,deny
+  Allow all
+  Require all granted
+</Location>
+
+<Location /admin>
+  Order allow,deny
+  Allow all
+  Require all granted
+</Location>
+
+<Location /admin/conf>
+  AuthType Default
+  Require user @SYSTEM
+</Location>
+
+DefaultAuthType Basic
+EOF
+
+    # Adicionar usuário atual ao grupo lpadmin
+    usermod -aG lpadmin "$USER"
+
+    # Habilitar e iniciar o serviço
     systemctl enable cups
     systemctl restart cups
 }

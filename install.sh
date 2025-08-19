@@ -15,6 +15,7 @@ PORTTAINER_VERSION="latest"
 UNIFI_VERSION="9.3.45"
 NEXTCLOUD_VERSION="latest"
 GLPI_VERSION="10.0.19"
+CUPS_VERSION="2.4.7"  # Versão mais recente estável do CUPS
 
 # Criar diretório temporário
 mkdir -p "$TEMPDIR"
@@ -237,56 +238,114 @@ EOF
     systemctl reload apache2
 }
 
-# Função para instalar CUPS
+# Função para instalar CUPS a partir do código-fonte
 install_cups() {
-    echo "Instalando CUPS..." | tee -a "$LOG_FILE"
-    apt-get install --reinstall -y cups
+    echo "Instalando CUPS $CUPS_VERSION a partir do código-fonte..." | tee -a "$LOG_FILE"
+    
+    # Instalar dependências de compilação
+    apt-get install -y build-essential git autoconf automake libtool \
+        libavahi-client-dev libavahi-common-dev libgnutls28-dev \
+        libkrb5-dev libpng-dev libjpeg-dev libtiff-dev libusb-1.0-0-dev \
+        zlib1g-dev libpam0g-dev libsystemd-dev libssl-dev
+    
+    # Baixar código-fonte do CUPS
+    wget -q -O "$TEMPDIR/cups-$CUPS_VERSION-source.tar.gz" \
+        "https://github.com/OpenPrinting/cups/releases/download/v$CUPS_VERSION/cups-$CUPS_VERSION-source.tar.gz"
+    
+    # Extrair e compilar
+    tar -xzf "$TEMPDIR/cups-$CUPS_VERSION-source.tar.gz" -C "$TEMPDIR/"
+    cd "$TEMPDIR/cups-$CUPS_VERSION"
+    
+    # Configurar e compilar
+    ./configure --prefix=/usr \
+                --sysconfdir=/etc \
+                --localstatedir=/var \
+                --with-systemd \
+                --with-dbusdir=/usr/share/dbus-1 \
+                --enable-libpaper \
+                --enable-debug \
+                --enable-ssl \
+                --enable-dnssd \
+                --enable-avahi
+    
+    make -j$(nproc)
+    make install
+    
+    # Criar usuário e grupo do sistema
+    if ! getent group lp >/dev/null; then
+        groupadd lp
+    fi
+    
+    if ! getent passwd lp >/dev/null; then
+        useradd -r -g lp -d /var/spool/cups -s /usr/sbin/nologin -c "CUPS Daemon" lp
+    fi
+    
+    # Criar diretórios necessários
+    mkdir -p /var/spool/cups /var/cache/cups /var/run/cups /var/log/cups
+    chown -R lp:lp /var/spool/cups /var/cache/cups /var/run/cups /var/log/cups
+    
+    # Configurar serviço systemd
+    cat > /etc/systemd/system/cups.service <<EOF
+[Unit]
+Description=CUPS Scheduler
+Documentation=man:cupsd(8)
+After=network.target nss-lookup.target
 
-    # Backup do arquivo original
-    cp /etc/cups/cupsd.conf /etc/cups/cupsd.conf.bak
+[Service]
+Type=notify
+ExecStart=/usr/sbin/cupsd -l
+ExecReload=/usr/sbin/cupsctl --help
+User=lp
+Group=lp
+RuntimeDirectory=cups
 
-    # Garantir diretório de execução
-    mkdir -p /var/run/cups
-    chown root:lp /var/run/cups
-    chmod 755 /var/run/cups
+[Install]
+WantedBy=multi-user.target
+EOF
 
-    # Substituir por um cups.conf funcional
+    # Configuração básica do CUPS
+    mkdir -p /etc/cups
     cat > /etc/cups/cupsd.conf <<EOF
 LogLevel warn
 MaxLogSize 0
 PageLogFormat
 
 Port 631
-Listen /run/cups/cups.sock
+Listen /var/run/cups/cups.sock
 
 Browsing On
 DefaultAuthType Basic
 WebInterface Yes
 
 <Location />
-  Require all granted
+  Order allow,deny
+  Allow all
 </Location>
 
 <Location /admin>
-  AuthType Default
-  Require all granted
+  Order allow,deny
+  Allow all
+  AuthType Basic
+  Require user @SYSTEM
 </Location>
 
 <Location /admin/conf>
-  AuthType Default
+  AuthType Basic
   Require user @SYSTEM
+  Order allow,deny
+  Allow all
 </Location>
 EOF
 
-    # Adicionar usuário ao grupo lpadmin
-    usermod -aG lpadmin "$(logname 2>/dev/null || whoami)"
-
-    # Testar configuração antes de iniciar
-    cupsd -t || { echo "Erro no cupsd.conf"; exit 1; }
-
+    # Adicionar usuário atual ao grupo lpadmin
+    usermod -aG lpadmin "$(logname 2>/dev/null || echo $SUDO_USER || whoami)"
+    
+    # Recarregar e iniciar serviço
     systemctl daemon-reload
     systemctl enable cups
-    systemctl restart cups || systemctl status cups -l --no-pager
+    systemctl start cups
+    
+    echo "CUPS $CUPS_VERSION instalado com sucesso a partir do código-fonte" | tee -a "$LOG_FILE"
 }
 
 # Função para instalar Duplicati

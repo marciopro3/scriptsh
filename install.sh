@@ -15,7 +15,7 @@ PORTTAINER_VERSION="latest"
 UNIFI_VERSION="9.3.45"
 NEXTCLOUD_VERSION="latest"
 GLPI_VERSION="10.0.19"
-CUPS_VERSION="2.4.7"  # Versão mais recente estável do CUPS
+CUPS_VERSION="2.4.7" 
 
 # Criar diretório temporário
 mkdir -p "$TEMPDIR"
@@ -238,7 +238,7 @@ EOF
     systemctl reload apache2
 }
 
-# Função para instalar CUPS a partir do código-fonte
+# Função para instalar CUPS 
 install_cups() {
     echo "Instalando CUPS $CUPS_VERSION a partir do código-fonte..." | tee -a "$LOG_FILE"
     
@@ -271,13 +271,18 @@ install_cups() {
     make -j$(nproc)
     make install
     
-    # Criar usuário e grupo do sistema
+    # Criar grupos do sistema necessários
     if ! getent group lp >/dev/null; then
         groupadd lp
     fi
     
+    if ! getent group lpadmin >/dev/null; then
+        groupadd lpadmin
+    fi
+    
+    # Criar usuário do sistema
     if ! getent passwd lp >/dev/null; then
-        useradd -r -g lp -d /var/spool/cups -s /usr/sbin/nologin -c "CUPS Daemon" lp
+        useradd -r -g lp -G lpadmin -d /var/spool/cups -s /usr/sbin/nologin -c "CUPS Daemon" lp
     fi
     
     # Criar diretórios necessários
@@ -338,7 +343,8 @@ WebInterface Yes
 EOF
 
     # Adicionar usuário atual ao grupo lpadmin
-    usermod -aG lpadmin "$(logname 2>/dev/null || echo $SUDO_USER || whoami)"
+    CURRENT_USER=$(logname 2>/dev/null || echo $SUDO_USER || whoami)
+    usermod -aG lpadmin "$CURRENT_USER"
     
     # Recarregar e iniciar serviço
     systemctl daemon-reload
@@ -346,6 +352,7 @@ EOF
     systemctl start cups
     
     echo "CUPS $CUPS_VERSION instalado com sucesso a partir do código-fonte" | tee -a "$LOG_FILE"
+    echo "Usuário '$CURRENT_USER' adicionado ao grupo lpadmin" | tee -a "$LOG_FILE"
 }
 
 # Função para instalar Duplicati

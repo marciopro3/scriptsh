@@ -263,6 +263,45 @@ EOF
     systemctl start duplicati
 }
 
+# Função para instalar CUPS (servidor de impressão)
+install_cups() {
+    echo "Instalando CUPS..." | tee -a "$LOG_FILE"
+    apt-get install -y cups
+    
+    # Permitir acesso remoto
+    sed -i 's/^Listen localhost:631/Port 631/' /etc/cups/cupsd.conf
+    sed -i 's/^\(.*<Location \/>\)/\1\n  Allow all/' /etc/cups/cupsd.conf
+    sed -i 's/^\(.*<Location \/admin>\)/\1\n  Allow all/' /etc/cups/cupsd.conf
+
+    systemctl restart cups
+    systemctl enable cups
+
+    # Configurar firewall
+    ufw allow 631/tcp
+}
+
+# Função para instalar Kuma (monitoramento)
+install_kuma() {
+    echo "Instalando Kuma (monitoramento)..." | tee -a "$LOG_FILE"
+    
+    # Instalar Docker se não estiver instalado
+    if ! command -v docker &> /dev/null; then
+        echo "Docker não encontrado, instalando..." | tee -a "$LOG_FILE"
+        apt-get install -y docker.io
+        systemctl enable docker
+        systemctl start docker
+    fi
+
+    # Rodar Kuma via Docker
+    docker run -d --name kuma \
+        -p 5681:5681 \
+        -p 5682:5682 \
+        -p 5683:5683 \
+        -p 5684:5684 \
+        --restart=always \
+        kuma/kuma:latest
+}
+
 # Atualizar sistema
 echo "Atualizando sistema..." | tee -a "$LOG_FILE"
 apt-get update
@@ -278,6 +317,8 @@ install_grafana
 install_docker_portainer
 install_nextcloud
 install_duplicati
+install_cups
+install_kuma
 
 # Limpeza final
 cleanup

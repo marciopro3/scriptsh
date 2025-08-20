@@ -282,14 +282,7 @@ install_cups() {
 
 # Função para instalar Uptime Kuma
 install_kuma() {
-    echo "Instalando Uptime Kuma (monitoramento)..." | tee -a "$LOG_FILE"
-
-    # Instalar Node.js 18 LTS se não estiver instalado
-    if ! command -v node &> /dev/null; then
-        echo "Node.js não encontrado, instalando..." | tee -a "$LOG_FILE"
-        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-        apt-get install -y nodejs build-essential
-    fi
+    echo "Instalando Uptime Kuma (monitoramento) (versão compilada)..." | tee -a "$LOG_FILE"
 
     # Criar diretório de instalação
     mkdir -p /opt/uptime-kuma
@@ -303,32 +296,29 @@ install_kuma() {
     tar -xvzf dist.tar.gz
     rm -f dist.tar.gz
 
-    # Instalar dependências do Node.js
-    npm install --production
+    # Configurar Apache para servir os arquivos na porta 3001
+    apt-get install -y apache2
+    ufw allow 3001/tcp
 
-    # Criar serviço systemd para iniciar automaticamente
-    cat <<EOF >/etc/systemd/system/uptime-kuma.service
-[Unit]
-Description=Uptime Kuma Service
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/uptime-kuma
-ExecStart=/usr/bin/node server/server.js
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
+    cat > /etc/apache2/sites-available/uptime-kuma.conf <<EOF
+Listen 3001
+<VirtualHost *:3001>
+    DocumentRoot /opt/uptime-kuma/dist
+    <Directory /opt/uptime-kuma/dist>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    ErrorLog \${APACHE_LOG_DIR}/uptime-kuma_error.log
+    CustomLog \${APACHE_LOG_DIR}/uptime-kuma_access.log combined
+</VirtualHost>
 EOF
 
-    # Ativar e iniciar serviço
-    systemctl daemon-reload
-    systemctl enable uptime-kuma
-    systemctl start uptime-kuma
+    a2ensite uptime-kuma.conf
+    systemctl reload apache2
+    systemctl enable apache2
 
-    echo "✅ Uptime Kuma instalado com sucesso! Acesse via http://<IP_DO_SERVIDOR>:3001" | tee -a "$LOG_FILE"
+    echo "✅ Uptime Kuma (dist) instalado com sucesso! Acesse via http://<IP_DO_SERVIDOR>:3001" | tee -a "$LOG_FILE"
 }
 
 # Atualizar sistema

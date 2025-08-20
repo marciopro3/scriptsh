@@ -50,6 +50,48 @@ cleanup() {
 # Registrar início da instalação
 echo "Iniciando instalação em $(date)" | tee "$LOG_FILE"
 
+# Função para verificar se MySQL está acessível
+check_mysql_access() {
+    if mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT 1;" >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Função para reconfigurar MySQL se necessário
+reconfigure_mysql() {
+    echo -e "${YELLOW}Problema de acesso ao MySQL detectado. Tentando reconfigurar...${NC}"
+    
+    # Parar MySQL
+    systemctl stop mysql
+    
+    # Iniciar MySQL sem verificação de autenticação
+    mysqld_safe --skip-grant-tables &
+    sleep 5
+    
+    # Redefinir senha root
+    mysql <<EOF
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
+FLUSH PRIVILEGES;
+EOF
+    
+    # Parar MySQL seguro e reiniciar normalmente
+    pkill mysqld
+    sleep 3
+    systemctl start mysql
+    
+    # Verificar se funcionou
+    if check_mysql_access; then
+        echo -e "${GREEN}✅ MySQL reconfigurado com sucesso!${NC}"
+        return 0
+    else
+        echo -e "${RED}❌ Falha ao reconfigurar MySQL${NC}"
+        return 1
+    fi
+}
+
 # Função para verificar se um serviço está instalado
 check_service_installed() {
     local service_name="$1"
@@ -112,6 +154,7 @@ show_main_menu() {
     echo -e "${GREEN}11.${NC} Instalar Uptime Kuma $(check_service_installed kuma && echo -e "${GREEN}[INSTALADO]${NC}" || echo -e "${RED}[NÃO INSTALADO]${NC}")"
     echo -e "${GREEN}12.${NC} Instalar TUDO"
     echo -e "${GREEN}13.${NC} Mostrar status dos serviços"
+    echo -e "${GREEN}14.${NC} Reparar MySQL"
     echo -e "${GREEN}0.${NC} Sair"
     echo -e "${BLUE}========================================${NC}"
 }
@@ -138,8 +181,8 @@ check_dependencies() {
     
     case $service in
         zabbix|glpi|nextcloud)
-            if ! check_service_installed mysql; then
-                missing_deps+=("MySQL")
+            if ! check_service_installed mysql || ! check_mysql_access; then
+                missing_deps+=("MySQL (acessível)")
             fi
             if ! check_service_installed apache; then
                 missing_deps+=("Apache")
@@ -165,7 +208,7 @@ show_services_status() {
     echo -e "${BLUE}========================================${NC}"
     echo -e "${BLUE}        STATUS DOS SERVIÇOS INSTALADOS  ${NC}"
     echo -e "${BLUE}========================================${NC}"
-    echo -e "MySQL: $(check_service_installed mysql && echo -e "${GREEN}INSTALADO${NC}" || echo -e "${RED}NÃO INSTALADO${NC}")"
+    echo -e "MySQL: $(check_service_installed mysql && check_mysql_access && echo -e "${GREEN}INSTALADO E ACESSÍVEL${NC}" || echo -e "${RED}NÃO INSTALADO/INACESSÍVEL${NC}")"
     echo -e "Apache: $(check_service_installed apache && echo -e "${GREEN}INSTALADO${NC}" || echo -e "${RED}NÃO INSTALADO${NC}")"
     echo -e "Zabbix: $(check_service_installed zabbix && echo -e "${GREEN}INSTALADO${NC}" || echo -e "${RED}NÃO INSTALADO${NC}")"
     echo -e "GLPI: $(check_service_installed glpi && echo -e "${GREEN}INSTALADO${NC}" || echo -e "${RED}NÃO INSTALADO${NC}")"
@@ -189,28 +232,51 @@ install_mysql() {
         # Instalar MySQL 
         DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
         
-        # Configurar senha root
-        mysql -uroot <<EOF
+        # Parar MySQL para reconfigurar
+        systemctl stop mysql
+        
+        # Configurar autenticação segura
+        echo -e "[mysqld]\nbind-address = 0.0.0.0" > /etc/mysql/conf.d/custom.cnf
+        
+        # Iniciar MySQL
+        systemctl start mysql
+        
+        # Configurar senha root com método mais robusto
+        mysql --user=root <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
 FLUSH PRIVILEGES;
 EOF
         
-        # Limpar usuários e banco de teste
-        mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='';"
-        mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-        mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS test;"
-        mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
+        # Verificar se a configuração foi bem sucedida
+        if check_mysql_access; then
+            # Limpar usuários e banco de teste
+            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='';"
+            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS test;"
+            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
+            
+            MYSQL_INSTALLED=1
+            echo -e "${GREEN}✅ MySQL instalado com sucesso!${NC}"
+        else
+            echo -e "${RED}❌ Falha na configuração do MySQL. Use a opção 14 para reparar.${NC}"
+        fi
         
-        # Permitir acesso remoto
-        sed -i 's/^bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
-        
-        # Reiniciar MySQL
-        systemctl restart mysql
-        
-        MYSQL_INSTALLED=1
-        echo -e "${GREEN}✅ MySQL instalado com sucesso!${NC}"
         sleep 2
     fi
+}
+
+# Função para reparar MySQL
+repair_mysql() {
+    echo -e "${YELLOW}Reparando instalação do MySQL...${NC}"
+    
+    if reconfigure_mysql; then
+        MYSQL_INSTALLED=1
+        echo -e "${GREEN}✅ MySQL reparado com sucesso!${NC}"
+    else
+        echo -e "${RED}❌ Falha ao reparar MySQL. Tente reinstalar manualmente.${NC}"
+    fi
+    
+    sleep 2
 }
 
 # Função para instalar Apache
@@ -610,6 +676,7 @@ while true; do
         11) install_kuma ;;
         12) install_all ;;
         13) show_services_status ;;
+        14) repair_mysql ;;
         0) 
             echo "Saindo..."
             cleanup

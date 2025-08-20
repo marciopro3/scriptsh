@@ -280,26 +280,55 @@ install_cups() {
     ufw allow 631/tcp
 }
 
-# Função para instalar Kuma (monitoramento)
+# Função para instalar Uptime Kuma
 install_kuma() {
-    echo "Instalando Kuma (monitoramento)..." | tee -a "$LOG_FILE"
-    
-    # Instalar Docker se não estiver instalado
-    if ! command -v docker &> /dev/null; then
-        echo "Docker não encontrado, instalando..." | tee -a "$LOG_FILE"
-        apt-get install -y docker.io
-        systemctl enable docker
-        systemctl start docker
+    echo "Instalando Uptime Kuma (monitoramento)..." | tee -a "$LOG_FILE"
+
+    # Instalar Node.js 18 LTS se não estiver instalado
+    if ! command -v node &> /dev/null; then
+        echo "Node.js não encontrado, instalando..." | tee -a "$LOG_FILE"
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+        apt-get install -y nodejs build-essential
     fi
 
-    # Rodar Kuma via Docker
-    docker run -d --name kuma \
-        -p 5681:5681 \
-        -p 5682:5682 \
-        -p 5683:5683 \
-        -p 5684:5684 \
-        --restart=always \
-        kuma/kuma:latest
+    # Criar diretório de instalação
+    mkdir -p /opt/uptime-kuma
+    cd /opt/uptime-kuma || exit 1
+
+    # Baixar versão oficial do GitHub
+    echo "Baixando Uptime Kuma versão 1.23.16..." | tee -a "$LOG_FILE"
+    curl -L https://github.com/louislam/uptime-kuma/releases/download/1.23.16/dist.tar.gz -o dist.tar.gz
+
+    # Extrair e remover arquivo baixado
+    tar -xvzf dist.tar.gz
+    rm -f dist.tar.gz
+
+    # Instalar dependências do Node.js
+    npm install --production
+
+    # Criar serviço systemd para iniciar automaticamente
+    cat <<EOF >/etc/systemd/system/uptime-kuma.service
+[Unit]
+Description=Uptime Kuma Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/uptime-kuma
+ExecStart=/usr/bin/node server/server.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Ativar e iniciar serviço
+    systemctl daemon-reload
+    systemctl enable uptime-kuma
+    systemctl start uptime-kuma
+
+    echo "✅ Uptime Kuma instalado com sucesso! Acesse via http://<IP_DO_SERVIDOR>:3001" | tee -a "$LOG_FILE"
 }
 
 # Atualizar sistema

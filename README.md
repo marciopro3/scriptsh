@@ -1,7 +1,3 @@
-Perfeito! Vou integrar o **Kuma (monitoramento)** na sua documentação de forma consistente com o restante do projeto. Aqui está a versão atualizada:
-
----
-
 # Projeto: EMPRESA LIVRE – Infraestrutura Completa e Gratuita para Pequenas Empresas
 
 O **EMPRESA LIVRE** é um projeto open source que tem como objetivo **ajudar pequenas empresas e empreendedores** a terem acesso a uma infraestrutura de TI **robusta, segura e moderna** — sem depender de altos investimentos em softwares proprietários.

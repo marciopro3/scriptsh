@@ -1,3 +1,7 @@
+Perfeito! Vou integrar o **Kuma (monitoramento)** na sua documentação de forma consistente com o restante do projeto. Aqui está a versão atualizada:
+
+---
+
 # Projeto: EMPRESA LIVRE – Infraestrutura Completa e Gratuita para Pequenas Empresas
 
 O **EMPRESA LIVRE** é um projeto open source que tem como objetivo **ajudar pequenas empresas e empreendedores** a terem acesso a uma infraestrutura de TI **robusta, segura e moderna** — sem depender de altos investimentos em softwares proprietários.
@@ -10,41 +14,44 @@ O propósito é **democratizar o acesso à tecnologia** e oferecer autonomia par
 
 ## O que você terá instalado
 
-| Ferramenta           | Para que serve                                                         |
-|----------------------|------------------------------------------------------------------------|
-| **GLPI**             | Gestão de chamados, inventário e ativos da empresa                     |
-| **Zabbix**           | Monitoramento da infraestrutura e dos serviços em tempo real           |
-| **UniFi Controller** | Controle centralizado da rede e dos dispositivos UniFi                 |
-| **Grafana**          | Dashboards analíticos e visualização de métricas                       |
-| **Nextcloud**        | Nuvem privada para arquivos e colaboração da equipe                    |
-| **MySQL**            | Banco de dados relacional utilizado por GLPI, Zabbix e Nextcloud       |
-| **Apache2**          | Servidor web configurado em múltiplas portas                           |
-| **Docker + Portainer** | Gerenciamento de containers com interface gráfica no navegador      |
-| **CUPS**             | Servidor de impressão em rede acessível via navegador                  |
-| **Duplicati**        | Sistema de backup automatizado e acessível via interface web           |
+| Ferramenta             | Para que serve                                                   |
+| ---------------------- | ---------------------------------------------------------------- |
+| **GLPI**               | Gestão de chamados, inventário e ativos da empresa               |
+| **Zabbix**             | Monitoramento da infraestrutura e dos serviços em tempo real     |
+| **Kuma**               | Monitoramento leve de containers e serviços em tempo real        |
+| **UniFi Controller**   | Controle centralizado da rede e dos dispositivos UniFi           |
+| **Grafana**            | Dashboards analíticos e visualização de métricas                 |
+| **Nextcloud**          | Nuvem privada para arquivos e colaboração da equipe              |
+| **MySQL**              | Banco de dados relacional utilizado por GLPI, Zabbix e Nextcloud |
+| **Apache2**            | Servidor web configurado em múltiplas portas                     |
+| **Docker + Portainer** | Gerenciamento de containers com interface gráfica no navegador   |
+| **CUPS**               | Servidor de impressão em rede acessível via navegador            |
+| **Duplicati**          | Sistema de backup automatizado e acessível via interface web     |
 
 ---
 
 ## Para quem é este projeto?
 
-- Pequenas empresas que não têm setor de TI estruturado  
-- Escritórios e prestadores de serviços que precisam de mais organização  
-- Empreendedores que querem reduzir custos com licenciamento de software  
-- Profissionais de TI que desejam implantar soluções rápidas e confiáveis em clientes  
+* Pequenas empresas que não têm setor de TI estruturado
+* Escritórios e prestadores de serviços que precisam de mais organização
+* Empreendedores que querem reduzir custos com licenciamento de software
+* Profissionais de TI que desejam implantar soluções rápidas e confiáveis em clientes
 
 ---
 
 ## Informações de Acesso Padrão
 
-- **Senha do MySQL root:** `Admin123*`  
-- **Senhas dos bancos (GLPI, Zabbix, Nextcloud):** `Admin123*`  
+* **Senha do MySQL root:** `Admin123*`
+* **Senhas dos bancos (GLPI, Zabbix, Nextcloud):** `Admin123*`
 
-**Endereços e portas de acesso:**  
-- GLPI → `http://<IP>:8888`  
-- Nextcloud → `http://<IP>:8081`  
-- Portainer → `https://<IP>:9443`  
-- CUPS (impressão) → `http://<IP>:631`  
-- Duplicati (backup) → `http://<IP>:8200`  
+**Endereços e portas de acesso:**
+
+* GLPI → `http://<IP>:8888`
+* Nextcloud → `http://<IP>:8081`
+* Portainer → `https://<IP>:9443`
+* CUPS (impressão) → `http://<IP>:631`
+* Duplicati (backup) → `http://<IP>:8200`
+* Kuma (monitoramento) → `http://<IP>:5681`
 
 ---
 
@@ -57,7 +64,7 @@ git clone https://github.com/marciopro3/scriptsh.git
 cd scriptsh
 chmod +x install.sh
 ./install.sh
-````
+```
 
 ---
 
@@ -68,18 +75,19 @@ O arquivo `install.sh` realiza automaticamente:
 1. Atualização do sistema
 2. Instalação do MySQL + criação de bancos e usuários
 3. Configuração de servidores web e PHP
-4. Instalação e configuração de GLPI, Zabbix e Nextcloud
-5. Configuração do Apache em múltiplas portas
-6. Instalação de Docker e Portainer
-7. Instalação do UniFi Controller e Grafana
-8. Configuração de CUPS (servidor de impressão)
-9. Instalação do Duplicati (backup)
+4. Instalação e configuração de GLPI, Zabbix, Nextcloud
+5. Instalação e configuração do Kuma (monitoramento)
+6. Configuração do Apache em múltiplas portas
+7. Instalação de Docker e Portainer
+8. Instalação do UniFi Controller e Grafana
+9. Configuração de CUPS (servidor de impressão)
+10. Instalação do Duplicati (backup)
 
 ---
 
 ## Como isso pode transformar sua empresa
 
-* Controle total do seu ambiente de TI (monitoramento com Zabbix)
+* Controle total do seu ambiente de TI (monitoramento com Zabbix e Kuma)
 * Gestão eficiente de chamados e ativos (GLPI)
 * Compartilhamento de arquivos seguro (Nextcloud)
 * Rede gerenciada com centralização (UniFi)

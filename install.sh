@@ -229,19 +229,19 @@ install_mysql() {
     if confirm_installation "MySQL"; then
         echo "Instalando e configurando MySQL..." | tee -a "$LOG_FILE"
         
-        # Instalar MySQL 
+        # Instalar MySQL
         DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
         
         # Parar MySQL para reconfigurar
         systemctl stop mysql
         
-        # Configurar autenticação segura
+        # Configurar bind-address para acesso externo (opcional)
         echo -e "[mysqld]\nbind-address = 0.0.0.0" > /etc/mysql/conf.d/custom.cnf
         
         # Iniciar MySQL
         systemctl start mysql
         
-        # Configurar senha root com método mais robusto
+        # Configurar senha root apenas na primeira vez (sem senha inicial)
         mysql --user=root <<EOF
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
 FLUSH PRIVILEGES;

@@ -231,9 +231,13 @@ install_mysql() {
         
         # Instalar MySQL
         DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
-        
-        # Parar MySQL para reconfigurar
+
+        # Parar MySQL
         systemctl stop mysql
+
+        # Garantir que o diretório do socket existe
+        mkdir -p /var/run/mysqld
+        chown mysql:mysql /var/run/mysqld
 
         # Configurar bind-address para acesso externo
         echo -e "[mysqld]\nbind-address = 0.0.0.0" > /etc/mysql/conf.d/custom.cnf
@@ -241,8 +245,8 @@ install_mysql() {
         # Iniciar MySQL em modo seguro (sem autenticação)
         mysqld_safe --skip-grant-tables --skip-networking &
         sleep 5
-        
-        # Definir senha root (localhost e remoto)
+
+        # Configurar root com senha e permitir acesso externo
         mysql --user=root <<EOF
 FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
@@ -257,8 +261,9 @@ EOF
 
         # Reiniciar MySQL normalmente
         systemctl start mysql
+        systemctl enable mysql
 
-        # Verificar se a configuração foi bem sucedida
+        # Verificar se o acesso root está funcionando
         if check_mysql_access; then
             # Limpar usuários e banco de teste
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='';"
@@ -267,11 +272,11 @@ EOF
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
             
             MYSQL_INSTALLED=1
-            echo -e "${GREEN}✅ MySQL instalado e configurado com acesso pelo Workbench (root@localhost e root@%)${NC}"
+            echo -e "${GREEN}✅ MySQL instalado e configurado com acesso Workbench (root@localhost e root@%)${NC}"
         else
             echo -e "${RED}❌ Falha na configuração do MySQL. Use a opção 14 para reparar.${NC}"
         fi
-        
+
         sleep 2
     fi
 }

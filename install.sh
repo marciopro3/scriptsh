@@ -234,29 +234,40 @@ install_mysql() {
         
         # Parar MySQL para reconfigurar
         systemctl stop mysql
-        
-        # Configurar bind-address para acesso externo (opcional)
+
+        # Configurar bind-address para acesso externo
         echo -e "[mysqld]\nbind-address = 0.0.0.0" > /etc/mysql/conf.d/custom.cnf
+
+        # Iniciar MySQL em modo seguro (sem autenticação)
+        mysqld_safe --skip-grant-tables --skip-networking &
+        sleep 5
         
-        # Iniciar MySQL
-        systemctl start mysql
-        
-        # Configurar senha root apenas na primeira vez (sem senha inicial)
+        # Definir senha root (localhost e remoto)
         mysql --user=root <<EOF
+FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
-        
+
+        # Finalizar mysqld_safe
+        pkill mysqld
+        sleep 3
+
+        # Reiniciar MySQL normalmente
+        systemctl start mysql
+
         # Verificar se a configuração foi bem sucedida
         if check_mysql_access; then
             # Limpar usuários e banco de teste
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='';"
-            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1', '%');"
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS test;"
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
             
             MYSQL_INSTALLED=1
-            echo -e "${GREEN}✅ MySQL instalado com sucesso!${NC}"
+            echo -e "${GREEN}✅ MySQL instalado e configurado com acesso pelo Workbench (root@localhost e root@%)${NC}"
         else
             echo -e "${RED}❌ Falha na configuração do MySQL. Use a opção 14 para reparar.${NC}"
         fi

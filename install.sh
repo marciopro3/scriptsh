@@ -235,7 +235,7 @@ install_mysql() {
         # Parar MySQL
         systemctl stop mysql
 
-        # Garantir que o diretório do socket existe
+        # Garantir diretório do socket
         mkdir -p /var/run/mysqld
         chown mysql:mysql /var/run/mysqld
 
@@ -246,12 +246,13 @@ install_mysql() {
         mysqld_safe --skip-grant-tables --skip-networking &
         sleep 5
 
-        # Configurar root com senha e permitir acesso externo
+        # Aplicar senha e remover auth_socket
         mysql --user=root <<EOF
 FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
 CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+DELETE FROM mysql.user WHERE plugin='auth_socket';
 FLUSH PRIVILEGES;
 EOF
 
@@ -263,14 +264,14 @@ EOF
         systemctl start mysql
         systemctl enable mysql
 
-        # Verificar se o acesso root está funcionando
-        if check_mysql_access; then
-            # Limpar usuários e banco de teste
+        # Verificar acesso root
+        if mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT 1;" >/dev/null 2>&1; then
+            # Limpar usuários sem senha e banco de teste
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='';"
-            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1', '%');"
+            mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost','127.0.0.1','::1','%');"
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS test;"
             mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
-            
+
             MYSQL_INSTALLED=1
             echo -e "${GREEN}✅ MySQL instalado e configurado com acesso Workbench (root@localhost e root@%)${NC}"
         else
